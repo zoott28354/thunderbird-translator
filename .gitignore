@@ -1,0 +1,26 @@
+# Build artifacts
+*.xpi
+*.zip
+dist/
+build/
+
+# Debug
+DEBUG.md
+.claude/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+.env
+
+# Dependencies (se in futuro usi npm)
+node_modules/
+package-lock.json
+yarn.lock

@@ -1,0 +1,30 @@
+{
+  "manifest_version": 2,
+  "name": "Thunderbird Ollama Translator",
+  "version": "1.0.0",
+  "description": "Traduci le email in italiano usando un'istanza locale di Ollama",
+  "author": "giulio",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "ollama-translator@thunderbird-addon",
+      "strict_min_version": "128.0"
+    }
+  },
+  "permissions": [
+    "messagesRead",
+    "messagesModify",
+    "menus",
+    "storage",
+    "tabs"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "options_ui": {
+    "page": "options/options.html"
+  },
+  "icons": {
+    "48": "icons/translate-48.png",
+    "96": "icons/translate-96.png"
+  }
+}

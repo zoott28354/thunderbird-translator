@@ -1,0 +1,12 @@
+# Auto line endings
+* text=auto
+
+# JavaScript
+*.js text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+
+# Images
+*.png binary
+*.jpg binary
+*.gif binary
