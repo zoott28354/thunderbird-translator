@@ -15,10 +15,11 @@ Un addon per Thunderbird che traduce le email in italiano usando un'istanza loca
 
 1. **Ollama** - Installato e in esecuzione sul tuo PC
    - Scarica da: https://ollama.ai
-   - Deve essere in esecuzione sulla porta `11434`
+   - Deve essere in esecuzione sulla porta `11434`(default)
 
 2. **Un modello Ollama** - Scaricato e caricato
    - Esempi: `ollama pull llama3.2` o `ollama pull mistral`
+     suggerisco il leggero 'translategemma:latest' da soli 3 gb
 
 3. **Thunderbird** - Versione 128 o superiore
 
@@ -73,7 +74,7 @@ Un addon per Thunderbird che traduce le email in italiano usando un'istanza loca
 1. **Apri una email** in inglese
 2. **Fai clic destro** sul corpo del testo
 3. Seleziona **"Traduci in italiano"**
-4. Attendi il messaggio "Traduzione completata"
+4. Attendi il messaggio "Traduzione completata" (durante la prima traduzione il modello deve essere caricato quindi sarà un pò lento ma dalle successive sarà più reattivo)
 
 ### Metodo 2: Pulsante Veloce
 1. **Apri una email** in inglese
