@@ -93,26 +93,59 @@
   </style>
 </head>
 <body>
-  <h2>Thunderbird Ollama Translator</h2>
+  <h2 data-i18n="appName"></h2>
 
+  <!-- Servizio di traduzione -->
   <div class="field">
-    <label for="ollamaUrl">URL server Ollama</label>
-    <input type="text" id="ollamaUrl" placeholder="http://localhost:11434">
+    <label for="service" data-i18n="translationService"></label>
+    <select id="service">
+      <option value="ollama">Ollama (locale)</option>
+      <option value="google">Google Translate</option>
+      <option value="libretranslate">LibreTranslate</option>
+    </select>
   </div>
 
+  <!-- Lingua di destinazione -->
   <div class="field">
-    <label for="model">Modello</label>
-    <div style="display: flex; gap: 8px;">
-      <select id="model" style="flex: 1;">
-        <option value="">-- Seleziona modello --</option>
-      </select>
-      <button id="refreshModels" title="Aggiorna lista modelli">&#x21bb;</button>
+    <label for="targetLanguage" data-i18n="targetLanguage"></label>
+    <select id="targetLanguage">
+      <option value="it">Italiano</option>
+      <option value="en">English</option>
+      <option value="es">Español</option>
+      <option value="fr">Français</option>
+      <option value="de">Deutsch</option>
+      <option value="pt">Português</option>
+      <option value="ru">Русский</option>
+      <option value="ja">日本語</option>
+      <option value="zh">中文</option>
+      <option value="ko">한국어</option>
+    </select>
+  </div>
+
+  <!-- Configurazione Ollama (mostra solo se Ollama è selezionato) -->
+  <div id="ollamaSection">
+    <div class="field">
+      <label for="ollamaUrl" data-i18n="ollamaUrl"></label>
+      <input type="text" id="ollamaUrl" placeholder="http://localhost:11434">
+    </div>
+
+    <div class="field">
+      <label for="model" data-i18n="model"></label>
+      <div style="display: flex; gap: 8px;">
+        <select id="model" style="flex: 1;">
+          <option value="" data-i18n="selectModel"></option>
+        </select>
+        <button id="refreshModels" title-i18n="refresh">&#x21bb;</button>
+      </div>
+    </div>
+
+    <div class="button-row">
+      <button id="testConnection" data-i18n="testConnection">Test Connection</button>
     </div>
   </div>
 
   <div class="button-row">
-    <button id="testConnection">Test connessione</button>
-    <button id="save" class="primary">Salva</button>
+    <button id="save" class="primary" data-i18n="save">Save</button>
   </div>
 
   <div id="status" class="status"></div>

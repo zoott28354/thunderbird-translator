@@ -26,6 +26,16 @@
   let toastEl = null;
   let toastTimeout = null;
 
+  // Translation messages - will be loaded from background
+  let messages = {
+    "translateButton": "🌐 Translate",
+    "noText": "No text to translate",
+    "translating": "Translating...",
+    "success": "Translation complete!",
+    "errorUnreachable": "Error: Server unreachable",
+    "error": "Translation error"
+  };
+
   // --- Port to background ---
 
   const port = browser.runtime.connect({ name: "translator" });
@@ -37,6 +47,15 @@
 
   port.onMessage.addListener((message) => {
     console.log("[Translator Content Script] Received message:", message.command || message.id);
+    
+    // Response with translation messages
+    if (message.command === "messages") {
+      messages = message.data;
+      console.log("[Translator Content Script] Messages loaded");
+      createTranslateButton();
+      return;
+    }
+
     // Response to a translate request
     if (message.id != null && pendingRequests.has(message.id)) {
       const { resolve, reject } = pendingRequests.get(message.id);
@@ -58,6 +77,16 @@
       toggleText(message.showOriginal);
     }
   });
+
+  // Request translation messages from background
+  port.postMessage({ command: "getMessages" });
+
+  // Create button when DOM is ready
+  if (document.body) {
+    createTranslateButton();
+  } else {
+    document.addEventListener("DOMContentLoaded", createTranslateButton);
+  }
 
   function sendTranslateRequest(text) {
     return new Promise((resolve, reject) => {
@@ -176,7 +205,7 @@
     const btn = document.createElement("button");
     btn.id = "ollama-translate-btn";
     btn.className = "ollama-translate-btn";
-    btn.textContent = "🌐 Traduci in italiano";
+    btn.textContent = messages.translateButton;
     btn.style.cssText = `
       position: fixed;
       top: 60px;
@@ -239,12 +268,12 @@
     const blocks = extractTextBlocks();
 
     if (blocks.length === 0) {
-      showToast("Nessun testo da tradurre", true);
+      showToast(messages.noText, true);
       return;
     }
 
     console.log(`[Translator] Starting translation of ${blocks.length} blocks`);
-    showToast(`Traduzione in corso...`);
+    showToast(messages.translating);
 
     try {
       // Combine ALL text blocks into one for better context
@@ -265,13 +294,13 @@
         applyTranslation(block, translatedText);
       }
 
-      showToast("Traduzione completata!", true);
+      showToast(messages.success, true);
     } catch (e) {
       console.error("[Translator] Translation failed:", e);
       if (e.message.includes("Failed to fetch") || e.message.includes("NetworkError")) {
-        showToast("Errore: Ollama non raggiungibile", true);
+        showToast(messages.errorUnreachable, true);
       } else {
-        showToast("Errore nella traduzione", true);
+        showToast(messages.error, true);
       }
       return;
     }

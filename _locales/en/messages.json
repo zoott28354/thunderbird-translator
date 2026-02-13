@@ -1,0 +1,122 @@
+{
+  "appName": {
+    "message": "Thunderbird Translator",
+    "description": "Name of the application"
+  },
+  "appDescription": {
+    "message": "Translate emails using Ollama, Google Translate or LibreTranslate",
+    "description": "Description of the application"
+  },
+  "noText": {
+    "message": "No text to translate",
+    "description": "Message when no text found"
+  },
+  "translationService": {
+    "message": "Translation Service",
+    "description": "Label for service selection"
+  },
+  "targetLanguage": {
+    "message": "Target Language",
+    "description": "Label for language selection"
+  },
+  "ollamaUrl": {
+    "message": "Ollama Server URL",
+    "description": "Label for Ollama server URL"
+  },
+  "model": {
+    "message": "Model",
+    "description": "Label for model selection"
+  },
+  "selectModel": {
+    "message": "-- Select model --",
+    "description": "Placeholder in model dropdown"
+  },
+  "testConnection": {
+    "message": "Test Connection",
+    "description": "Button to test connection"
+  },
+  "save": {
+    "message": "Save",
+    "description": "Button to save settings"
+  },
+  "refresh": {
+    "message": "Refresh model list",
+    "description": "Tooltip of refresh button"
+  },
+  "translateTo": {
+    "message": "Translate to",
+    "description": "Prefix of context menu"
+  },
+  "showOriginal": {
+    "message": "Show Original",
+    "description": "Menu to show original text"
+  },
+  "showTranslation": {
+    "message": "Show Translation",
+    "description": "Menu to show translation"
+  },
+  "translateButton": {
+    "message": "🌐 Translate",
+    "description": "Text of translate button"
+  },
+  "translating": {
+    "message": "Translating...",
+    "description": "Message while translating"
+  },
+  "translationError": {
+    "message": "Translation Error",
+    "description": "Error message"
+  },
+  "connectionFailed": {
+    "message": "Connection failed: {error}",
+    "description": "Connection error message",
+    "placeholders": {
+      "error": {
+        "content": "$1",
+        "example": "Server unreachable"
+      }
+    }
+  },
+  "connectionSuccess": {
+    "message": "Connection successful! {count} models found.",
+    "description": "Successful connection message",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "urlRequired": {
+    "message": "Enter the Ollama server URL",
+    "description": "Validation message"
+  },
+  "modelRequired": {
+    "message": "Select a model",
+    "description": "Validation message"
+  },
+  "settingsSaved": {
+    "message": "Settings saved",
+    "description": "Success message"
+  },
+  "modelsRefreshed": {
+    "message": "Model list refreshed",
+    "description": "Models refreshed message"
+  },
+  "noModelsFound": {
+    "message": "-- No models installed --",
+    "description": "Message when no models found"
+  },
+  "cannotLoadModels": {
+    "message": "-- Unable to load models --",
+    "description": "Message when models cannot be loaded"
+  },
+  "saved": {
+    "message": "(saved)",
+    "description": "Suffix for saved model"
+  },
+  "notFound": {
+    "message": "(not found)",
+    "description": "Suffix for not found model"
+  }
+}

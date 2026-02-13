@@ -1,0 +1,122 @@
+{
+  "appName": {
+    "message": "Thunderbird Translator",
+    "description": "Nome dell'applicazione"
+  },
+  "appDescription": {
+    "message": "Traduci le email usando Ollama, Google Translate o LibreTranslate",
+    "description": "Descrizione dell'applicazione"
+  },
+  "noText": {
+    "message": "Nessun testo da tradurre",
+    "description": "Message when no text found"
+  },
+  "translationService": {
+    "message": "Servizio di traduzione",
+    "description": "Label per la scelta del servizio"
+  },
+  "targetLanguage": {
+    "message": "Lingua di destinazione",
+    "description": "Label per la scelta della lingua"
+  },
+  "ollamaUrl": {
+    "message": "URL server Ollama",
+    "description": "Label per l'URL del server Ollama"
+  },
+  "model": {
+    "message": "Modello",
+    "description": "Label per la scelta del modello"
+  },
+  "selectModel": {
+    "message": "-- Seleziona modello --",
+    "description": "Placeholder nel dropdown dei modelli"
+  },
+  "testConnection": {
+    "message": "Test connessione",
+    "description": "Bottone per testare la connessione"
+  },
+  "save": {
+    "message": "Salva",
+    "description": "Bottone per salvare le impostazioni"
+  },
+  "refresh": {
+    "message": "Aggiorna lista modelli",
+    "description": "Tooltip del bottone di refresh"
+  },
+  "translateTo": {
+    "message": "Traduci in",
+    "description": "Prefisso del menu contestuale"
+  },
+  "showOriginal": {
+    "message": "Mostra originale",
+    "description": "Menu per mostrare il testo originale"
+  },
+  "showTranslation": {
+    "message": "Mostra traduzione",
+    "description": "Menu per mostrare la traduzione"
+  },
+  "translateButton": {
+    "message": "🌐 Traduci",
+    "description": "Testo del bottone di traduzione"
+  },
+  "translating": {
+    "message": "Traduzione in corso...",
+    "description": "Message while translating"
+  },
+  "translationError": {
+    "message": "Errore nella traduzione",
+    "description": "Error message"
+  },
+  "connectionFailed": {
+    "message": "Connessione fallita: {error}",
+    "description": "Messaggio di errore connessione",
+    "placeholders": {
+      "error": {
+        "content": "$1",
+        "example": "Server non raggiungibile"
+      }
+    }
+  },
+  "connectionSuccess": {
+    "message": "Connessione riuscita! {count} modelli trovati.",
+    "description": "Messaggio di connessione riuscita",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "urlRequired": {
+    "message": "Inserisci l'URL del server Ollama",
+    "description": "Messaggio di validazione"
+  },
+  "modelRequired": {
+    "message": "Seleziona un modello",
+    "description": "Messaggio di validazione"
+  },
+  "settingsSaved": {
+    "message": "Impostazioni salvate",
+    "description": "Messaggio di successo"
+  },
+  "modelsRefreshed": {
+    "message": "Lista modelli aggiornata",
+    "description": "Messaggio di refresh modelli"
+  },
+  "noModelsFound": {
+    "message": "-- Nessun modello installato --",
+    "description": "Messaggio quando nessun modello è trovato"
+  },
+  "cannotLoadModels": {
+    "message": "-- Impossibile caricare i modelli --",
+    "description": "Messaggio quando non è possibile caricare i modelli"
+  },
+  "saved": {
+    "message": "(salvato)",
+    "description": "Suffisso per modello salvato"
+  },
+  "notFound": {
+    "message": "(non trovato)",
+    "description": "Suffisso per modello non trovato"
+  }
+}

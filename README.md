@@ -6,10 +6,13 @@ Un addon per Thunderbird che traduce le email in italiano usando un'istanza loca
 
 - **Traduzione locale** - Non invia dati online, tutto rimane sul tuo PC
 - **Supporta tutti i modelli Ollama** - Llama, Mistral, Neural Chat, ecc.
+- **Supporta diversi servizi di traduzione** - Ollama, Google Translate, LibreTranslate
+- **Traduzione in più lingue** - Non solo italiano, ma anche English, Español, Français, Deutsch, e altre
 - **Interfaccia semplice** - Fai clic destro sulla email e seleziona "Traduci in italiano"
 - **Pulsante veloce** - Alternativa al menu contestuale
 - **Toggle** - Passa facilmente tra testo originale e tradotto
 - **Impostazioni persistenti** - Le tue configurazioni si salvano automaticamente
+- **Interfaccia localizzata** - Supporto per diverse lingue
 
 ## 📋 Requisiti
 

@@ -14,6 +14,9 @@
 - [x] Test di connessione a Ollama
 - [x] Interfaccia opzioni semplice
 - [x] Toast notifications (messaggi in basso a destra)
+- [x] Supporto per più servizi di traduzione (Ollama, Google Translate, LibreTranslate)
+- [x] Traduzione in più lingue
+- [x] Interfaccia utente localizzata
 
 ### 🔧 Architettura
 

@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "description": "Traduci le email in italiano usando un'istanza locale di Ollama",
   "author": "giulio",
+  "default_locale": "en",
   "browser_specific_settings": {
     "gecko": {
       "id": "ollama-translator@thunderbird-addon",

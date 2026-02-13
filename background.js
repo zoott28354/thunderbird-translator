@@ -2,38 +2,71 @@
 
 const DEFAULT_OLLAMA_URL = "http://localhost:11434";
 const DEFAULT_MODEL = "llama3.2";
+const DEFAULT_SERVICE = "ollama";
+const DEFAULT_TARGET_LANGUAGE = "it";
 
-const TRANSLATE_PROMPT = `Translate the following text to Italian.
-Rules:
-- Only output the translation, nothing else
-- Preserve the original formatting
-- Do not add notes or explanations
-- If the text is already in Italian, return it unchanged
-
-Text: `;
+const LANGUAGE_NAMES = {
+  it: "italiano",
+  en: "English",
+  es: "Español",
+  fr: "Français",
+  de: "Deutsch",
+  pt: "Português",
+  ru: "Русский",
+  ja: "日本語",
+  zh: "中文",
+  ko: "한국어",
+};
 
 // --- Settings ---
 
 async function getSettings() {
-  const defaults = { ollamaUrl: DEFAULT_OLLAMA_URL, model: DEFAULT_MODEL };
+  const defaults = { 
+    ollamaUrl: DEFAULT_OLLAMA_URL, 
+    model: DEFAULT_MODEL,
+    service: DEFAULT_SERVICE,
+    targetLanguage: DEFAULT_TARGET_LANGUAGE,
+  };
   const stored = await messenger.storage.local.get(defaults);
   return stored;
 }
 
 // --- Context Menu ---
 
-function createContextMenu() {
+async function createContextMenu() {
   try {
-    messenger.menus.create({
-      id: "translate-italian",
-      title: "Traduci in italiano",
-      contexts: ["all"],
-    });
-    console.log("[Translator] Menu created successfully");
+    const result = await messenger.storage.local.get(["targetLanguage", "service"]);
+    const targetLang = result.targetLanguage || DEFAULT_TARGET_LANGUAGE;
+    const langName = LANGUAGE_NAMES[targetLang] || targetLang;
+    const title = browser.i18n.getMessage("translateTo") + " " + langName;
+    
+    try {
+      messenger.menus.create({
+        id: "translate-lang",
+        title: title,
+        contexts: ["all"],
+      });
+      console.log("[Translator] Menu created: " + title);
+    } catch (e) {
+      // Menu exists, update it
+      messenger.menus.update("translate-lang", { title });
+    }
   } catch (e) {
-    console.warn("[Translator] Menu creation warning:", e.message);
+    console.warn("[Translator] Error in createContextMenu:", e.message);
   }
 }
+
+// --- Initialize context menu on startup ---
+messenger.runtime.onStartup.addListener(() => {
+  createContextMenu();
+});
+
+// --- Update context menu when settings change ---
+messenger.storage.onChanged.addListener((changes, area) => {
+  if (area === "local" && (changes.targetLanguage || changes.service)) {
+    createContextMenu();
+  }
+});
 
 // --- Port-based communication with content scripts ---
 
@@ -56,6 +89,30 @@ messenger.runtime.onConnect.addListener((port) => {
 
   // Handle messages from content script through the port
   port.onMessage.addListener(async (message) => {
+    if (message.command === "getMessages") {
+      // Send localized messages to content script
+      const getMsg = (key, fallback) => {
+        try {
+          return browser.i18n?.getMessage(key) || fallback;
+        } catch (e) {
+          return fallback;
+        }
+      };
+      
+      port.postMessage({
+        command: "messages",
+        data: {
+          translateButton: getMsg("translateButton", "🌐 Translate"),
+          noText: getMsg("noText", "No text to translate"),
+          translating: getMsg("translating", "Translating..."),
+          success: getMsg("translationComplete", "Translation complete!"),
+          errorUnreachable: "Error: " + getMsg("translationError", "Translation error"),
+          error: getMsg("translationError", "Translation error"),
+        }
+      });
+      return;
+    }
+
     if (message.command === "translate") {
       try {
         const settings = await getSettings();
@@ -73,12 +130,12 @@ messenger.runtime.onConnect.addListener((port) => {
       try {
         messenger.menus.create({
           id: "toggle-original",
-          title: "Mostra originale",
+          title: browser.i18n.getMessage("showOriginal"),
           contexts: ["all"],
         });
       } catch (_) {
         messenger.menus.update("toggle-original", {
-          title: "Mostra originale",
+          title: browser.i18n.getMessage("showOriginal"),
           visible: true,
         });
       }
@@ -88,16 +145,26 @@ messenger.runtime.onConnect.addListener((port) => {
 
 // --- Ollama API ---
 
-async function translateText(text, settings) {
-  const { ollamaUrl, model } = settings;
+async function translateWithOllama(text, settings) {
+  const { ollamaUrl, model, targetLanguage } = settings;
   const url = `${ollamaUrl}/api/generate`;
+
+  const langName = LANGUAGE_NAMES[targetLanguage] || targetLanguage;
+  const prompt = `Translate the following text to ${langName}.
+Rules:
+- Only output the translation, nothing else
+- Preserve the original formatting
+- Do not add notes or explanations
+- If the text is already in ${langName}, return it unchanged
+
+Text: ${text}`;
 
   const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       model,
-      prompt: TRANSLATE_PROMPT + text,
+      prompt,
       stream: false,
     }),
   });
@@ -108,6 +175,91 @@ async function translateText(text, settings) {
 
   const data = await response.json();
   return data.response.trim();
+}
+
+// --- Google Translate API (non-official, free) ---
+
+async function translateWithGoogle(text, targetLanguage) {
+  // Usa l'API di Google Translate non-ufficiale
+  // Simula una richiesta come farebbe un browser
+  const url = "https://translate.googleapis.com/translate_a/element.js";
+  
+  // Fallback usando l'API di translate.google.com
+  const params = new URLSearchParams({
+    client: "gtx",
+    sl: "auto",
+    tl: targetLanguage,
+    dt: "t",
+    q: text,
+  });
+
+  const response = await fetch(`https://translate.google.com/translate_a/single?${params}`, {
+    method: "GET",
+    headers: {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Google Translate error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  // Array structure: [[[translated_text, original_text, ...]], ...]
+  if (data && data[0] && data[0][0] && data[0][0][0]) {
+    return data[0][0][0].trim();
+  }
+
+  throw new Error("Invalid response from Google Translate");
+}
+
+// --- LibreTranslate API (free public instance) ---
+
+async function translateWithLibreTranslate(text, targetLanguage) {
+  const url = "https://libretranslate.de/translate";
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      q: text,
+      source: "auto",
+      target: targetLanguage,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`LibreTranslate error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  if (data && data.translatedText) {
+    return data.translatedText.trim();
+  }
+
+  throw new Error("Invalid response from LibreTranslate");
+}
+
+// --- Main Translation Function ---
+
+async function translateText(text, settings) {
+  const { service } = settings;
+  
+  try {
+    switch (service) {
+      case "ollama":
+        return await translateWithOllama(text, settings);
+      case "google":
+        return await translateWithGoogle(text, settings.targetLanguage);
+      case "libretranslate":
+        return await translateWithLibreTranslate(text, settings.targetLanguage);
+      default:
+        throw new Error(`Unknown service: ${service}`);
+    }
+  } catch (e) {
+    console.error(`[Translator] ${service} error:`, e);
+    throw e;
+  }
 }
 
 async function getInstalledModels(ollamaUrl) {
@@ -128,7 +280,7 @@ let showingOriginal = false;
 // --- Event Handlers ---
 
 messenger.menus.onClicked.addListener(async (info, tab) => {
-  if (info.menuItemId === "translate-italian") {
+  if (info.menuItemId === "translate-lang") {
     console.log("[Translator] 'Traduci' menu clicked. Tab:", tab ? tab.id : "unknown");
     
     // Get the active message tab
@@ -164,7 +316,9 @@ messenger.menus.onClicked.addListener(async (info, tab) => {
   } else if (info.menuItemId === "toggle-original") {
     showingOriginal = !showingOriginal;
     messenger.menus.update("toggle-original", {
-      title: showingOriginal ? "Mostra traduzione" : "Mostra originale",
+      title: showingOriginal 
+        ? browser.i18n.getMessage("showTranslation") 
+        : browser.i18n.getMessage("showOriginal"),
     });
     if (activePort) {
       activePort.postMessage({
@@ -202,10 +356,17 @@ messenger.runtime.onMessage.addListener(async (message, sender) => {
   }
 
   if (message.command === "saveSettings") {
+    // Aggiorna il menu quando cambiano le impostazioni
     await messenger.storage.local.set({
+      service: message.service || DEFAULT_SERVICE,
+      targetLanguage: message.targetLanguage || DEFAULT_TARGET_LANGUAGE,
       ollamaUrl: message.ollamaUrl,
       model: message.model,
     });
+    
+    // Ricrea il menu con la nuova lingua
+    createContextMenu();
+    
     return { success: true };
   }
 });
