@@ -104,22 +104,30 @@ Un addon per Thunderbird che traduce le email in italiano usando un'istanza loca
 
 ## 🎯 Come Usare
 
-### Metodo 1: Menu Contestuale
-1. **Apri una email** in inglese
+### Menu Contestuale (Raccomandato)
+1. **Apri una email** che vuoi tradurre
 2. **Fai clic destro** sul corpo del testo
-3. Seleziona **"Traduci in italiano"**
-4. Attendi il messaggio "Traduzione completata" (durante la prima traduzione il modello deve essere caricato quindi sarà un pò lento ma dalle successive sarà più reattivo)
+3. **Scegli il servizio** di traduzione:
+   - **"Traduci con Ollama"** → Traduzione locale e privata (richiede Ollama installato)
+   - **"Traduci con Google Translate"** → Traduzione online gratuita
+   - **"Traduci con LibreTranslate"** → Traduzione online open-source
+4. **Seleziona la lingua** di destinazione dal sottomenu
+   - La lingua selezionata apparirà in **grassetto**
+   - Questa scelta diventa il default per quel servizio
+5. Attendi il messaggio "Traduzione completata"
 
-### Metodo 2: Pulsante Veloce
-1. **Apri una email** in inglese
+**Esempio**: Se selezioni "Traduci con Google Translate > Español", tutte le successive traduzioni con Google Translate saranno in spagnolo (finché non scegli un'altra lingua).
+
+### Metodo Alternativo: Pulsante Veloce
+1. **Apri una email**
 2. Guarda l'**angolo in alto a destra** della email
-3. Clicca il **pulsante blu** 🌐 **"Traduci in italiano"**
-4. Attendi il completamento
+3. Clicca il **pulsante blu** 🌐 **"Translate"**
+4. Verrà usato il servizio e la lingua configurati nelle impostazioni
 
 ### Toggle Originale/Traduzione
 - Dopo la traduzione, fai **clic destro** sul testo
-- Seleziona **"Mostra originale"** per tornare all'inglese
-- Seleziona di nuovo **"Mostra traduzione"** per ritornare all'italiano
+- Seleziona **"Mostra originale"** per vedere il testo originale
+- Seleziona di nuovo **"Mostra traduzione"** per tornare alla traduzione
 
 ## 🔒 Sicurezza
 
