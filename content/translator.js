@@ -46,8 +46,8 @@
   let nextRequestId = 0;
 
   port.onMessage.addListener((message) => {
-    console.log("[Translator Content Script] Received message:", message.command || message.id);
-    
+    console.log("[Translator Content Script] Received message:", message.command || `id:${message.id}`, message);
+
     // Response with translation messages
     if (message.command === "messages") {
       messages = message.data;
@@ -58,14 +58,19 @@
 
     // Response to a translate request
     if (message.id != null && pendingRequests.has(message.id)) {
+      console.log(`[Translator Content Script] Processing translation response for id ${message.id}`);
       const { resolve, reject } = pendingRequests.get(message.id);
       pendingRequests.delete(message.id);
       if (message.success) {
+        console.log(`[Translator Content Script] Translation successful, length: ${message.translated?.length || 0}`);
         resolve(message.translated);
       } else {
+        console.log(`[Translator Content Script] Translation failed:`, message.error);
         reject(new Error(message.error));
       }
       return;
+    } else if (message.id != null) {
+      console.warn(`[Translator Content Script] Received response for unknown request id: ${message.id}`);
     }
 
     // Commands from background
@@ -189,7 +194,12 @@
 
       const block = blocks.get(blockParent);
       block.nodes.push(textNode);
-      block.text += (block.text ? " " : "") + textNode.textContent.trim();
+
+      // Use original text if this node was previously translated
+      const nodeData = nodeMap.get(textNode);
+      const textToUse = nodeData && nodeData.original ? nodeData.original : textNode.textContent.trim();
+
+      block.text += (block.text ? " " : "") + textToUse;
     }
 
     return Array.from(blocks.values());
@@ -247,16 +257,22 @@
   function applyTranslation(block, translatedText) {
     if (block.nodes.length === 1) {
       const node = block.nodes[0];
+      const existingData = nodeMap.get(node);
+
+      // Preserve original text if already translated before
       nodeMap.set(node, {
-        original: node.textContent,
+        original: existingData && existingData.original ? existingData.original : node.textContent,
         translated: translatedText,
       });
       node.textContent = translatedText;
     } else {
       for (let i = 0; i < block.nodes.length; i++) {
         const node = block.nodes[i];
+        const existingData = nodeMap.get(node);
+
+        // Preserve original text if already translated before
         nodeMap.set(node, {
-          original: node.textContent,
+          original: existingData && existingData.original ? existingData.original : node.textContent,
           translated: i === 0 ? translatedText : "",
         });
         node.textContent = i === 0 ? translatedText : "";
@@ -273,27 +289,33 @@
     }
 
     console.log(`[Translator] Starting translation of ${blocks.length} blocks`);
+    console.log(`[Translator] Using ${nodeMap.size} previously translated nodes`);
     showToast(messages.translating);
 
     try {
       // Combine ALL text blocks into one for better context
       const allText = blocks.map(b => b.text).join("\n\n");
       console.log(`[Translator] Total text length: ${allText.length} characters`);
+      console.log(`[Translator] First 100 chars to translate:`, allText.substring(0, 100));
 
       // Translate everything at once
       const fullTranslation = await sendTranslateRequest(allText);
-      console.log(`[Translator] Got full translation, applying to blocks...`);
+      console.log(`[Translator] Got full translation (length: ${fullTranslation?.length || 0}), applying to blocks...`);
+      console.log(`[Translator] First 200 chars of translation:`, fullTranslation?.substring(0, 200));
 
       // Split the translation back into blocks (by double newlines)
       const translatedParts = fullTranslation.split("\n\n");
+      console.log(`[Translator] Split into ${translatedParts.length} parts`);
 
       // Apply translations to blocks
       for (let i = 0; i < blocks.length; i++) {
         const block = blocks[i];
         let translatedText = translatedParts[i]?.trim() || block.text;
+        console.log(`[Translator] Applying translation to block ${i}: "${translatedText.substring(0, 50)}..."`);
         applyTranslation(block, translatedText);
       }
 
+      console.log(`[Translator] Translation applied to ${blocks.length} blocks`);
       showToast(messages.success, true);
     } catch (e) {
       console.error("[Translator] Translation failed:", e);
