@@ -1,14 +1,18 @@
-# Thunderbird Ollama Translator #
+# Thunderbird Ollama Translator
 
-Un addon per Thunderbird che traduce le email in italiano usando un'istanza locale di Ollama.
+🇬🇧 [English](README.en.md) | 🇮🇹 [Italiano](README.md) | 🇫🇷 [Français](README.fr.md) | 🇪🇸 [Español](README.es.md) | 🇩🇪 [Deutsch](README.de.md) | 🇵🇹 [Português](README.pt.md) | 🇷🇺 [Русский](README.ru.md)
+
+---
+
+Un addon per Thunderbird che traduce le email in più lingue usando Ollama, Google Translate o LibreTranslate.
 
 ## 🚀 Caratteristiche
 
-- **Traduzione locale** - Non invia dati online, tutto rimane sul tuo PC
+- **Traduzione locale** - Con Ollama: non invia dati online, tutto rimane sul tuo PC
 - **Supporta tutti i modelli Ollama** - Llama, Mistral, Neural Chat, ecc.
 - **Supporta diversi servizi di traduzione** - Ollama, Google Translate, LibreTranslate
-- **Traduzione in più lingue** - Non solo italiano, ma anche English, Español, Français, Deutsch, e altre
-- **Interfaccia semplice** - Fai clic destro sulla email e seleziona "Traduci in italiano"
+- **Traduzione in più lingue** - Supporta 10 lingue: Italiano, English, Español, Français, Deutsch, Português, Русский, 日本語, 中文, 한국어
+- **Interfaccia semplice** - Fai clic destro sulla email e scegli il servizio e la lingua
 - **Pulsante veloce** - Alternativa al menu contestuale
 - **Toggle** - Passa facilmente tra testo originale e tradotto
 - **Impostazioni persistenti** - Le tue configurazioni si salvano automaticamente
@@ -315,7 +319,7 @@ MIT License - Libero di usare, modificare e distribuire.
 
 Se hai problemi:
 1. **Apri la console** (Ctrl+Shift+I in una scheda Thunderbird)
-2. **Fai clic destro** sulla email > Traduci in italiano
+2. **Fai clic destro** sulla email > Seleziona servizio e lingua di traduzione
 3. **Guarda i messaggi blu** `[Translator]` nella console
 4. **Copia i messaggi di errore** e condividili
 
