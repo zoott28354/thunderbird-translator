@@ -9,11 +9,13 @@
   - [x] Google Translate (online, gratuito)
   - [x] LibreTranslate (online, open-source)
 - [x] **Traduzione multilingua** (10 lingue supportate)
-- [x] Menu contestuale dinamico "Traduci in [lingua]"
+- [x] **Menu contestuale per servizio** - 3 menu parent separati (Ollama, Google, LibreTranslate)
+- [x] **Lingua indipendente per servizio** - Ogni servizio ricorda la propria lingua target
+- [x] **Evidenziazione grassetto** - Lingua selezionata mostrata in bold nel menu
 - [x] Pulsante floating azzurro nella email
 - [x] Contesto completo (tutto il testo tradotto in una richiesta)
 - [x] Toggle originale/traduzione
-- [x] Impostazioni persistenti (servizio, URL, modello, lingua)
+- [x] Impostazioni persistenti (servizio, URL, modello, lingua per servizio)
 - [x] Test di connessione a Ollama
 - [x] Interfaccia opzioni avanzata
 - [x] Toast notifications (messaggi in basso a destra)
@@ -30,14 +32,18 @@ manifest.json (v2)
 ├── host_permissions: localhost, translate.google.com, translate.fedilab.app, etc.
 │
 ├── background.js
-│   ├── Menu contestuale dinamico ("Traduci in [lingua]")
+│   ├── Menu contestuale per servizio (3 parent menu separati)
+│   │   ├── "Traduci con Ollama" → 10 lingue (ollamaTargetLang)
+│   │   ├── "Traduci con Google Translate" → 10 lingue (googleTargetLang)
+│   │   └── "Traduci con LibreTranslate" → 10 lingue (libreTargetLang)
+│   ├── Evidenziazione bold per lingua selezionata per servizio
 │   ├── Script injection dinamico
 │   ├── Comunicazione port-based con content script
 │   ├── Richieste API:
 │   │   ├── translateWithOllama() → localhost:11434
 │   │   ├── translateWithGoogle() → translate.google.com (concatena segmenti multipli)
 │   │   └── translateWithLibreTranslate() → fallback multi-instance (fedilab.app, etc.)
-│   ├── Gestione settings (storage)
+│   ├── Gestione settings (storage con lingua per servizio)
 │   ├── Internazionalizzazione (i18n messages)
 │   └── Logging dettagliato
 │
@@ -248,6 +254,8 @@ Se il progetto cresce:
 - **LibreTranslate fallback**: Sistema multi-instance per resilienza (fedilab.app → libretranslate.com → argosopentech.com)
 - **NodeMap preservation**: `extractTextBlocks()` usa sempre testo originale da `nodeMap` per traduzioni successive
 - **OLLAMA_ORIGINS**: Necessario configurare `OLLAMA_ORIGINS="*"` per permettere richieste da estensioni browser
+- **Storage per servizio**: Ogni servizio ha la propria lingua target salvata (ollamaTargetLang, googleTargetLang, libreTargetLang)
+- **Menu HTML bold**: Usa tag `<b>` nei titoli menu per evidenziare lingua selezionata (supportato da Thunderbird menus API)
 
 ## 👤 Contatti & Credits
 
