@@ -22,63 +22,21 @@ Un addon per Thunderbird che traduce le email in più lingue usando Ollama, Goog
 
 ### Per usare Ollama (locale, più privato)
 
-1. **Ollama** - Installato e in esecuzione sul tuo PC
+1. **Ollama** installato sul tuo PC
    - Scarica da: https://ollama.ai
-   - Deve essere in esecuzione sulla porta `11434` (default)
 
-2. **⚠️ CONFIGURAZIONE OBBLIGATORIA - OLLAMA_ORIGINS**
+2. **Un modello Ollama** scaricato
+   - Raccomandato: `ollama pull translategemma` (3GB, ottimizzato)
+   - Alternative: `llama3.2`, `mistral`
 
-   **Perché è necessario?**
-   Per motivi di sicurezza, Ollama blocca le richieste da estensioni browser. Devi configurare la variabile d'ambiente `OLLAMA_ORIGINS="*"` per permettere all'addon di comunicare con Ollama.
+3. **Thunderbird** versione 128 o superiore
 
-   **Come configurarlo:**
-
-   **Windows PowerShell (temporaneo - solo per la sessione corrente):**
-   ```powershell
-   $env:OLLAMA_ORIGINS="*"
-   ollama serve
-   ```
-
-   **Windows PowerShell (permanente):**
-   ```powershell
-   # Imposta la variabile d'ambiente permanentemente
-   [System.Environment]::SetEnvironmentVariable('OLLAMA_ORIGINS', '*', 'User')
-
-   # Riavvia Ollama
-   ollama serve
-   ```
-
-   **Linux/Mac (temporaneo):**
-   ```bash
-   export OLLAMA_ORIGINS="*"
-   ollama serve
-   ```
-
-   **Linux/Mac (permanente - aggiungi al tuo ~/.bashrc o ~/.zshrc):**
-   ```bash
-   echo 'export OLLAMA_ORIGINS="*"' >> ~/.bashrc
-   source ~/.bashrc
-   ollama serve
-   ```
-
-   **⚠️ Nota sulla sicurezza:**
-   `OLLAMA_ORIGINS="*"` permette a qualsiasi origine di accedere a Ollama. Se preferisci maggiore sicurezza, puoi specificare solo l'estensione:
-   ```bash
-   OLLAMA_ORIGINS="moz-extension://*"
-   ```
-
-3. **Un modello Ollama** - Scaricato e caricato
-   - **Raccomandato**: `ollama pull translategemma` (3GB, ottimizzato per traduzioni)
-   - Alternative: `ollama pull llama3.2` o `ollama pull mistral`
-
-4. **Thunderbird** - Versione 128 o superiore
+⚠️ **Nota importante**: Prima di usare Ollama, dovrai configurare `OLLAMA_ORIGINS` (vedi sezione "Configurazione Iniziale" sotto).
 
 ### Per usare Google Translate o LibreTranslate (online, gratuiti)
 
 - **Nessun requisito** - Funzionano immediatamente
 - **Connessione internet** richiesta
-- Google Translate: API non ufficiale (gratuita ma potrebbe avere limiti)
-- LibreTranslate: Istanza pubblica gratuita (translate.fedilab.app)
 
 ## 📦 Installazione
 
@@ -104,53 +62,56 @@ Un addon per Thunderbird che traduce le email in più lingue usando Ollama, Goog
 
 ## ⚙️ Configurazione Iniziale
 
-1. **Apri le impostazioni dell'addon**:
-   - Vai a **Menu > Tools > Add-ons**
-   - Cerca "Ollama Translator"
-   - Clicca su **"Preferences"**
+### 1. Apri le impostazioni dell'addon
+   - Menu > Tools > Add-ons > "Ollama Translator" > Preferences
 
-2. **Scegli il servizio di traduzione**:
-   - **Ollama** (locale, privato) - Richiede installazione
-   - **Google Translate** (online, gratuito) - Funziona subito
-   - **LibreTranslate** (online, open-source) - Funziona subito
+### 2. Scegli servizio e lingua
+   - **Servizio**: Ollama (locale) / Google Translate / LibreTranslate
+   - **Lingua**: Italiano, English, Español, Français, Deutsch, Português, Русский, 日本語, 中文, 한국어
 
-3. **Scegli la lingua di destinazione**:
-   - Italiano, English, Español, Français, Deutsch, Português, Русский, 日本語, 中文, 한국어
+### 3. Se usi Ollama: Configurazione OBBLIGATORIA
 
-### Se usi Ollama:
+#### ⚠️ Configura OLLAMA_ORIGINS
 
-4. **⚠️ PRIMO PASSO OBBLIGATORIO - Configura OLLAMA_ORIGINS**:
+**Perché serve?**
+Per motivi di sicurezza, Ollama blocca le richieste da estensioni browser. Devi autorizzare esplicitamente Thunderbird.
 
-   **Prima** di usare l'addon con Ollama, devi configurare questa variabile d'ambiente (vedi sezione "Requisiti" sopra per istruzioni dettagliate).
+**Valore raccomandato (più sicuro):**
+```
+OLLAMA_ORIGINS=moz-extension://*
+```
+Permette solo a estensioni Firefox/Thunderbird di accedere a Ollama. Blocca tutti i siti web esterni.
 
-   Verifica rapida - apri PowerShell/Terminal:
-   ```bash
-   # Windows PowerShell:
-   $env:OLLAMA_ORIGINS="*"
-   ollama serve
+**Come configurarlo:**
 
-   # Linux/Mac:
-   export OLLAMA_ORIGINS="*"
-   ollama serve
-   ```
+**Windows (CMD):**
+```cmd
+setx OLLAMA_ORIGINS "moz-extension://*"
+```
+Poi chiudi e riapri il terminale e avvia Ollama:
+```cmd
+ollama serve
+```
 
-   **Senza questa configurazione, riceverai l'errore "403 Forbidden"!**
+**Linux/Mac (permanente):**
+```bash
+echo 'export OLLAMA_ORIGINS="moz-extension://*"' >> ~/.bashrc
+source ~/.bashrc
+ollama serve
+```
 
-5. **Inserisci l'URL di Ollama**:
-   - Default: `http://localhost:11434`
-   - Se Ollama è su un'altra macchina, usa il suo IP
+**Opzione alternativa** (se hai bisogno anche di app locali):
+```
+OLLAMA_ORIGINS=moz-extension://*,http://localhost:11434
+```
 
-6. **Testa la connessione**:
-   - Clicca **"Test connessione"**
-   - Se va bene, vedrai il numero di modelli disponibili
+#### 4. Configura URL e modello
+   - **URL Ollama**: `http://localhost:11434` (default)
+   - **Test connessione**: Clicca per verificare che Ollama sia raggiungibile
+   - **Modello**: Seleziona `translategemma` (raccomandato) o altro modello installato
 
-7. **Seleziona il modello**:
-   - **Raccomandato**: `translategemma` (ottimizzato per traduzioni, veloce)
-   - Alternative veloci: `llama3.2`, `mistral`
-   - Alternative accurate: `llama2`, `neural-chat`
-
-8. **Salva**:
-   - Clicca **"Salva"**
+#### 5. Salva
+   - Clicca "Salva"
 
 ## 🎯 Come Usare
 
@@ -220,30 +181,20 @@ Nessun accesso a:
 
 1. **Ferma Ollama** se è in esecuzione (Ctrl+C nel terminale dove gira `ollama serve`)
 
-2. **Configura la variabile d'ambiente**:
+2. **Configura la variabile d'ambiente** (valore raccomandato per sicurezza):
 
-   **Windows PowerShell (permanente - RACCOMANDATO):**
-   ```powershell
-   # Imposta variabile d'ambiente permanente
-   [System.Environment]::SetEnvironmentVariable('OLLAMA_ORIGINS', '*', 'User')
-
-   # Verifica che sia impostata
-   [System.Environment]::GetEnvironmentVariable('OLLAMA_ORIGINS', 'User')
-   # Dovrebbe mostrare: *
+   **Windows (CMD):**
+   ```cmd
+   setx OLLAMA_ORIGINS "moz-extension://*"
    ```
 
-   **Windows PowerShell (temporaneo - solo questa sessione):**
-   ```powershell
-   $env:OLLAMA_ORIGINS="*"
-   ```
-
-   **Linux/Mac (permanente - RACCOMANDATO):**
+   **Linux/Mac:**
    ```bash
-   echo 'export OLLAMA_ORIGINS="*"' >> ~/.bashrc
+   echo 'export OLLAMA_ORIGINS="moz-extension://*"' >> ~/.bashrc
    source ~/.bashrc
    ```
 
-3. **Riavvia Ollama**:
+3. **Chiudi e riapri il terminale**, poi avvia Ollama:
    ```bash
    ollama serve
    ```
@@ -254,7 +205,7 @@ Nessun accesso a:
    - Clicca "Test connessione"
    - Dovrebbe mostrare "Connessione riuscita: X modelli disponibili"
 
-**Nota**: Se usi `moz-extension://*` invece di `*`, funzionerà solo per le estensioni Firefox/Thunderbird (più sicuro).
+**Nota**: `moz-extension://*` permette solo a estensioni Firefox/Thunderbird di accedere a Ollama, bloccando siti web esterni (più sicuro).
 
 ### "Errore: Ollama non raggiungibile"
 - Avvia Ollama: `ollama serve`
