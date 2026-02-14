@@ -136,17 +136,14 @@ testBtn.addEventListener("click", async () => {
 
 saveBtn.addEventListener("click", async () => {
   clearStatus();
-  
+
   const service = serviceSelect.value;
   const targetLanguage = targetLanguageSelect.value;
+  const ollamaUrl = urlInput.value.trim();
+  const model = modelSelect.value;
 
-  let settings = { service, targetLanguage };
-
-  // Se Ollama è selezionato, valida i campi Ollama
+  // Valida i campi Ollama solo se Ollama è selezionato
   if (service === "ollama") {
-    const ollamaUrl = urlInput.value.trim();
-    const model = modelSelect.value;
-
     if (!ollamaUrl) {
       showStatus("urlRequired", true);
       return;
@@ -155,10 +152,15 @@ saveBtn.addEventListener("click", async () => {
       showStatus("modelRequired", true);
       return;
     }
-
-    settings.ollamaUrl = ollamaUrl;
-    settings.model = model;
   }
+
+  // Salva TUTTI i campi sempre, non solo quando Ollama è selezionato
+  const settings = {
+    service,
+    targetLanguage,
+    ollamaUrl,
+    model,
+  };
 
   await browser.runtime.sendMessage({
     command: "saveSettings",

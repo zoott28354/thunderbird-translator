@@ -24,8 +24,8 @@ Un addon per Thunderbird che traduce le email in italiano usando un'istanza loca
    - **IMPORTANTE**: Configura `OLLAMA_ORIGINS="*"` per permettere l'accesso dall'estensione
 
 2. **Un modello Ollama** - Scaricato e caricato
-   - Esempi: `ollama pull llama3.2` o `ollama pull mistral`
-   - Suggerisco il leggero 'translategemma:latest' da soli 3 gb
+   - **Raccomandato**: `ollama pull translategemma` (3GB, ottimizzato per traduzioni)
+   - Alternative: `ollama pull llama3.2` o `ollama pull mistral`
 
 3. **Thunderbird** - Versione 128 o superiore
 
@@ -95,9 +95,9 @@ Un addon per Thunderbird che traduce le email in italiano usando un'istanza loca
    - Se va bene, vedrai il numero di modelli disponibili
 
 7. **Seleziona il modello**:
-   - Scegli il modello che vuoi usare
-   - I modelli più veloci: `llama3.2`, `mistral`
-   - I modelli più accurati: `llama2`, `neural-chat`
+   - **Raccomandato**: `translategemma` (ottimizzato per traduzioni, veloce)
+   - Alternative veloci: `llama3.2`, `mistral`
+   - Alternative accurate: `llama2`, `neural-chat`
 
 8. **Salva**:
    - Clicca **"Salva"**
@@ -194,13 +194,14 @@ Nessun accesso a:
 
 ### La traduzione è lenta (solo Ollama)
 - Verifica che il modello sia completamente caricato in memoria
-- Modelli veloci: llama3.2, mistral (~4GB)
+- Modelli veloci: translategemma (~3GB), llama3.2, mistral (~4GB)
 - Modelli lenti: llama2, neural-chat (~7GB+)
 
 ### La traduzione non è accurata
 - Prova un servizio diverso (Google Translate è molto accurato)
 - Per Ollama: prova un modello diverso
-- Modelli consigliati: `llama3.2`, `neural-chat`, `translategemma`
+- **Raccomandato**: `translategemma` (specializzato per traduzioni)
+- Alternative: `llama3.2`, `neural-chat`
 
 ## 📊 Performance
 

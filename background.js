@@ -1,7 +1,7 @@
 "use strict";
 
 const DEFAULT_OLLAMA_URL = "http://localhost:11434";
-const DEFAULT_MODEL = "llama3.2";
+const DEFAULT_MODEL = "translategemma";
 const DEFAULT_SERVICE = "ollama";
 const DEFAULT_TARGET_LANGUAGE = "it";
 
