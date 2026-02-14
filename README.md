@@ -1,4 +1,4 @@
-# Thunderbird Ollama Translator
+# Thunderbird Ollama Translator #
 
 Un addon per Thunderbird che traduce le email in italiano usando un'istanza locale di Ollama.
 
