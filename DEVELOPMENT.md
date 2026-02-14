@@ -2,44 +2,63 @@
 
 ## 📊 Stato Attuale (v1.0.0)
 
-### ✅ Funzionamenti
+### ✅ Funzionalità Implementate
 
-- [x] Traduzione email in italiano
-- [x] Menu contestuale "Traduci in italiano"
+- [x] **Servizi di traduzione multipli**:
+  - [x] Ollama (locale, privato)
+  - [x] Google Translate (online, gratuito)
+  - [x] LibreTranslate (online, open-source)
+- [x] **Traduzione multilingua** (10 lingue supportate)
+- [x] Menu contestuale dinamico "Traduci in [lingua]"
 - [x] Pulsante floating azzurro nella email
-- [x] Parallellizzazione della trauzione (batch da 10 blocchi)
 - [x] Contesto completo (tutto il testo tradotto in una richiesta)
 - [x] Toggle originale/traduzione
-- [x] Impostazioni persistenti (URL e modello)
+- [x] Impostazioni persistenti (servizio, URL, modello, lingua)
 - [x] Test di connessione a Ollama
-- [x] Interfaccia opzioni semplice
+- [x] Interfaccia opzioni avanzata
 - [x] Toast notifications (messaggi in basso a destra)
-- [x] Supporto per più servizi di traduzione (Ollama, Google Translate, LibreTranslate)
-- [x] Traduzione in più lingue
-- [x] Interfaccia utente localizzata
+- [x] Interfaccia utente localizzata (en, it, de)
+- [x] **Traduzioni multiple** - Preserva testo originale tra traduzioni successive
+- [x] **CORS permissions** - Accesso a servizi esterni configurato correttamente
+- [x] **Logging dettagliato** - Per debugging e sviluppo
 
 ### 🔧 Architettura
 
 ```
 manifest.json (v2)
+├── permissions: messagesRead, messagesModify, menus, storage, tabs
+├── host_permissions: localhost, translate.google.com, translate.fedilab.app, etc.
+│
 ├── background.js
-│   ├── Menu contestuale ("Traduci in italiano")
+│   ├── Menu contestuale dinamico ("Traduci in [lingua]")
 │   ├── Script injection dinamico
 │   ├── Comunicazione port-based con content script
-│   ├── Richieste API a Ollama
-│   └── Gestione settings (storage)
+│   ├── Richieste API:
+│   │   ├── translateWithOllama() → localhost:11434
+│   │   ├── translateWithGoogle() → translate.google.com (concatena segmenti multipli)
+│   │   └── translateWithLibreTranslate() → fallback multi-instance (fedilab.app, etc.)
+│   ├── Gestione settings (storage)
+│   ├── Internazionalizzazione (i18n messages)
+│   └── Logging dettagliato
 │
 ├── content/translator.js
-│   ├── Estrazione blocchi di testo
+│   ├── Estrazione blocchi di testo (extractTextBlocks)
+│   ├── NodeMap preservation (preserva testo originale)
 │   ├── Pulsante floating
 │   ├── Port di comunicazione
-│   ├── Applicazione traduzioni al DOM
-│   └── Toggle originale/tradotto
+│   ├── Applicazione traduzioni al DOM (applyTranslation)
+│   ├── Toggle originale/tradotto
+│   └── Logging dettagliato
 │
-└── options/
-    ├── options.html
-    ├── options.js
-    └── options.css (css inline in html)
+├── options/
+│   ├── options.html (UI con service selector, language selector)
+│   ├── options.js (load models, test connection, save settings)
+│   └── options.css (css inline in html)
+│
+└── _locales/
+    ├── en/messages.json
+    ├── it/messages.json
+    └── de/messages.json
 ```
 
 ### 📡 Flusso Dati
@@ -129,10 +148,20 @@ async function startTranslation() { ... }
 btn.style.cssText = `...`  // ← Modificare CSS qui
 ```
 
-## 🐛 Problemi Noti
+## 🐛 Problemi Risolti (v1.0.1)
 
-| Problema | Soluzione | Priorità |
-|----------|-----------|----------|
+| Problema | Stato | Commit |
+|----------|-------|--------|
+| CORS errors per Google/LibreTranslate | ✅ RISOLTO | 20bec9a |
+| Google Translate parsava solo primo segmento | ✅ RISOLTO | 20bec9a |
+| LibreTranslate richiedeva API key | ✅ RISOLTO | 20bec9a |
+| Traduzioni multiple non funzionavano | ✅ RISOLTO | 20bec9a |
+| Ollama 403 Forbidden | ✅ RISOLTO (docs) | 20bec9a |
+
+## 🐛 Problemi Noti (da risolvere)
+
+| Problema | Soluzione Proposta | Priorità |
+|----------|-------------------|----------|
 | Email lunghe (>1MB) | Aumentare timeout Ollama | Bassa |
 | Modelli lenti bloccano la UI | Usare worker thread | Media |
 | Toast a volte non appare | Aggiungere fallback HTML | Bassa |
@@ -210,10 +239,15 @@ Se il progetto cresce:
 ## 📝 Note Importanti
 
 - **Manifest v2** usato perché Thunderbird 128 non supporta v3
+- **Host permissions** richieste esplicitamente nell'array `permissions` (MV2), non in `host_permissions` separato (MV3)
 - **Content script iniettato dinamicamente** perché content_scripts statici non funzionavano
 - **Una richiesta per tutta l'email** per preservare il contesto (non blocco per blocco)
 - **Port-based communication** per mantenere connessione persistente tra content e background
-- **localStorage locale** per evitare espensioni a cloud
+- **localStorage locale** per evitare estensioni a cloud
+- **Google Translate parsing**: Concatena array multipli (`data[0]`) perché Google divide testi lunghi in segmenti
+- **LibreTranslate fallback**: Sistema multi-instance per resilienza (fedilab.app → libretranslate.com → argosopentech.com)
+- **NodeMap preservation**: `extractTextBlocks()` usa sempre testo originale da `nodeMap` per traduzioni successive
+- **OLLAMA_ORIGINS**: Necessario configurare `OLLAMA_ORIGINS="*"` per permettere richieste da estensioni browser
 
 ## 👤 Contatti & Credits
 
@@ -224,4 +258,4 @@ Se il progetto cresce:
 
 ---
 
-**Last Updated**: 12 Febbraio 2026
+**Last Updated**: 14 Febbraio 2026 (dopo fix CORS e traduzioni multiple)

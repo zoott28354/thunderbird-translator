@@ -16,15 +16,25 @@ Un addon per Thunderbird che traduce le email in italiano usando un'istanza loca
 
 ## 📋 Requisiti
 
+### Per usare Ollama (locale, più privato)
+
 1. **Ollama** - Installato e in esecuzione sul tuo PC
    - Scarica da: https://ollama.ai
    - Deve essere in esecuzione sulla porta `11434`(default)
+   - **IMPORTANTE**: Configura `OLLAMA_ORIGINS="*"` per permettere l'accesso dall'estensione
 
 2. **Un modello Ollama** - Scaricato e caricato
    - Esempi: `ollama pull llama3.2` o `ollama pull mistral`
-     suggerisco il leggero 'translategemma:latest' da soli 3 gb
+   - Suggerisco il leggero 'translategemma:latest' da soli 3 gb
 
 3. **Thunderbird** - Versione 128 o superiore
+
+### Per usare Google Translate o LibreTranslate (online, gratuiti)
+
+- **Nessun requisito** - Funzionano immediatamente
+- **Connessione internet** richiesta
+- Google Translate: API non ufficiale (gratuita ma potrebbe avere limiti)
+- LibreTranslate: Istanza pubblica gratuita (translate.fedilab.app)
 
 ## 📦 Installazione
 
@@ -55,20 +65,41 @@ Un addon per Thunderbird che traduce le email in italiano usando un'istanza loca
    - Cerca "Ollama Translator"
    - Clicca su **"Preferences"**
 
-2. **Inserisci l'URL di Ollama**:
+2. **Scegli il servizio di traduzione**:
+   - **Ollama** (locale, privato) - Richiede installazione
+   - **Google Translate** (online, gratuito) - Funziona subito
+   - **LibreTranslate** (online, open-source) - Funziona subito
+
+3. **Scegli la lingua di destinazione**:
+   - Italiano, English, Español, Français, Deutsch, Português, Русский, 日本語, 中文, 한국어
+
+### Se usi Ollama:
+
+4. **Configura OLLAMA_ORIGINS** (importante!):
+   ```bash
+   # Windows PowerShell:
+   $env:OLLAMA_ORIGINS="*"
+   ollama serve
+
+   # Linux/Mac:
+   export OLLAMA_ORIGINS="*"
+   ollama serve
+   ```
+
+5. **Inserisci l'URL di Ollama**:
    - Default: `http://localhost:11434`
    - Se Ollama è su un'altra macchina, usa il suo IP
 
-3. **Testa la connessione**:
+6. **Testa la connessione**:
    - Clicca **"Test connessione"**
    - Se va bene, vedrai il numero di modelli disponibili
 
-4. **Seleziona il modello**:
+7. **Seleziona il modello**:
    - Scegli il modello che vuoi usare
    - I modelli più veloci: `llama3.2`, `mistral`
    - I modelli più accurati: `llama2`, `neural-chat`
 
-5. **Salva**:
+8. **Salva**:
    - Clicca **"Salva"**
 
 ## 🎯 Come Usare
@@ -101,38 +132,67 @@ Un addon per Thunderbird che traduce le email in italiano usando un'istanza loca
 
 ### 🛡️ Permessi Richiesti
 - `messagesRead` - Legge il contenuto della email (per tradurre)
+- `messagesModify` - Modifica il testo visualizzato (per mostrare la traduzione)
 - `menus` - Aggiunge il menu contestuale
 - `storage` - Salva le impostazioni
 - `tabs` - Inietta lo script nella email
+- **Host permissions** (solo se usi Google Translate o LibreTranslate):
+  - `https://translate.google.com/*` - API Google Translate
+  - `https://translate.fedilab.app/*` - Istanza LibreTranslate
+  - `http://localhost/*` - Per Ollama locale
 
 Nessun accesso a:
 - ❌ Rubrica, calendario, chat
 - ❌ Account credentials
 - ❌ Database Thunderbird
-- ❌ File system
-- ❌ Internet (solo localhost)
+- ❌ File system (eccetto localhost per Ollama)
 
 ## 🚨 Troubleshooting
 
-### Il menu "Traduci in italiano" non appare
-- Verifica che Ollama sia in esecuzione: `curl http://localhost:11434/api/tags`
+### Il menu "Traduci in [lingua]" non appare
 - Ricarica l'addon: Menu > Tools > Add-ons > Ollama Translator > Ricarica
 - Prova un'altra email
+- Controlla che l'addon sia abilitato
+
+### "Errore: Ollama error: 403 Forbidden"
+- **CAUSA**: Ollama blocca richieste dalle estensioni browser
+- **SOLUZIONE**: Configura `OLLAMA_ORIGINS="*"` prima di avviare Ollama:
+  ```bash
+  # Windows PowerShell:
+  $env:OLLAMA_ORIGINS="*"
+  ollama serve
+
+  # Oppure permanente:
+  setx OLLAMA_ORIGINS "*"
+  # Poi riavvia Ollama
+  ```
 
 ### "Errore: Ollama non raggiungibile"
 - Avvia Ollama: `ollama serve`
-- Verifica che sia sulla porta 11434
+- Verifica che sia sulla porta 11434: `curl http://localhost:11434/api/tags`
 - Controlla l'URL nelle impostazioni
 
-### La traduzione è lenta
+### Google Translate non traduce tutto il testo
+- **RISOLTO** nella versione corrente (concatena tutti i segmenti)
+- Se il problema persiste, ricarica l'addon
+
+### La prima traduzione funziona ma le successive no
+- **RISOLTO** nella versione corrente (preserva testo originale)
+- Il bug è stato corretto nel commit più recente
+
+### LibreTranslate da errore "API key required"
+- **RISOLTO** nella versione corrente (usa istanza gratuita fedilab.app)
+- L'addon prova automaticamente 3 istanze diverse
+
+### La traduzione è lenta (solo Ollama)
 - Verifica che il modello sia completamente caricato in memoria
 - Modelli veloci: llama3.2, mistral (~4GB)
 - Modelli lenti: llama2, neural-chat (~7GB+)
 
 ### La traduzione non è accurata
-- Prova un modello diverso
-- Modelli consigliati per italiano: `llama3.2`, `neural-chat`
-- Più grande è il modello, più accurato (ma più lento)
+- Prova un servizio diverso (Google Translate è molto accurato)
+- Per Ollama: prova un modello diverso
+- Modelli consigliati: `llama3.2`, `neural-chat`, `translategemma`
 
 ## 📊 Performance
 
