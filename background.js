@@ -21,11 +21,14 @@ const LANGUAGE_NAMES = {
 // --- Settings ---
 
 async function getSettings() {
-  const defaults = { 
-    ollamaUrl: DEFAULT_OLLAMA_URL, 
+  const defaults = {
+    ollamaUrl: DEFAULT_OLLAMA_URL,
     model: DEFAULT_MODEL,
     service: DEFAULT_SERVICE,
     targetLanguage: DEFAULT_TARGET_LANGUAGE,
+    ollamaTargetLang: DEFAULT_TARGET_LANGUAGE,
+    googleTargetLang: "en",
+    libreTargetLang: "en",
   };
   const stored = await messenger.storage.local.get(defaults);
   return stored;
@@ -37,38 +40,78 @@ let menuCreated = false;
 
 async function createContextMenu() {
   try {
-    const result = await messenger.storage.local.get(["targetLanguage"]);
-    const defaultLang = result.targetLanguage || DEFAULT_TARGET_LANGUAGE;
+    const settings = await getSettings();
+    const { ollamaTargetLang, googleTargetLang, libreTargetLang } = settings;
 
     // Remove all existing menus first (only if already created)
     if (menuCreated) {
       await messenger.menus.removeAll();
     }
 
-    // Create parent menu item
-    const translateTitle = browser.i18n.getMessage("translateTo") || "Translate to";
+    const languages = Object.keys(LANGUAGE_NAMES);
+
+    // Create Ollama menu with language submenus
     await messenger.menus.create({
-      id: "translate-parent",
-      title: `${translateTitle} ▶`,
+      id: "translate-ollama-parent",
+      title: "Traduci con Ollama",
       contexts: ["all"],
     });
 
-    // Create submenu for each language
-    const languages = Object.keys(LANGUAGE_NAMES);
     for (const langCode of languages) {
       const langName = LANGUAGE_NAMES[langCode];
-      const isDefault = langCode === defaultLang;
+      const isSelected = langCode === ollamaTargetLang;
+      const title = isSelected ? `<b>${langName}</b>` : langName;
 
       await messenger.menus.create({
-        id: `translate-to-${langCode}`,
-        parentId: "translate-parent",
-        title: isDefault ? `✓ ${langName}` : `  ${langName}`,
+        id: `ollama-${langCode}`,
+        parentId: "translate-ollama-parent",
+        title: title,
+        contexts: ["all"],
+      });
+    }
+
+    // Create Google Translate menu with language submenus
+    await messenger.menus.create({
+      id: "translate-google-parent",
+      title: "Traduci con Google Translate",
+      contexts: ["all"],
+    });
+
+    for (const langCode of languages) {
+      const langName = LANGUAGE_NAMES[langCode];
+      const isSelected = langCode === googleTargetLang;
+      const title = isSelected ? `<b>${langName}</b>` : langName;
+
+      await messenger.menus.create({
+        id: `google-${langCode}`,
+        parentId: "translate-google-parent",
+        title: title,
+        contexts: ["all"],
+      });
+    }
+
+    // Create LibreTranslate menu with language submenus
+    await messenger.menus.create({
+      id: "translate-libre-parent",
+      title: "Traduci con LibreTranslate",
+      contexts: ["all"],
+    });
+
+    for (const langCode of languages) {
+      const langName = LANGUAGE_NAMES[langCode];
+      const isSelected = langCode === libreTargetLang;
+      const title = isSelected ? `<b>${langName}</b>` : langName;
+
+      await messenger.menus.create({
+        id: `libre-${langCode}`,
+        parentId: "translate-libre-parent",
+        title: title,
         contexts: ["all"],
       });
     }
 
     menuCreated = true;
-    console.log(`[Translator] Menu created with ${languages.length} language options. Default: ${LANGUAGE_NAMES[defaultLang]}`);
+    console.log(`[Translator] Menu created with 3 services, each with ${languages.length} language options`);
   } catch (e) {
     console.warn("[Translator] Error in createContextMenu:", e.message);
   }
@@ -87,8 +130,8 @@ messenger.runtime.onInstalled.addListener(() => {
 
 // --- Update context menu when settings change ---
 messenger.storage.onChanged.addListener((changes, area) => {
-  if (area === "local" && changes.targetLanguage) {
-    console.log("[Translator] Target language changed, updating menu");
+  if (area === "local" && (changes.ollamaTargetLang || changes.googleTargetLang || changes.libreTargetLang)) {
+    console.log("[Translator] Service language changed, updating menu");
     createContextMenu();
   }
 });
@@ -147,9 +190,6 @@ messenger.runtime.onConnect.addListener((port) => {
         if (message.targetLanguage) {
           settings = { ...settings, targetLanguage: message.targetLanguage };
           console.log(`[Translator] Using target language from menu: ${message.targetLanguage}`);
-        } else if (currentSessionLanguage) {
-          settings = { ...settings, targetLanguage: currentSessionLanguage };
-          console.log(`[Translator] Using current session language: ${currentSessionLanguage}`);
         }
 
         console.log(`[Translator] Settings loaded:`, settings);
@@ -375,19 +415,39 @@ async function getInstalledModels(ollamaUrl) {
 let toggleMenuCreated = false;
 let showingOriginal = false;
 
-// --- Current Session Language (runtime only, not persisted) ---
-let currentSessionLanguage = null;
-
 // --- Event Handlers ---
 
 messenger.menus.onClicked.addListener(async (info, tab) => {
-  // Check if it's a language submenu item
-  if (info.menuItemId.startsWith("translate-to-")) {
-    const targetLang = info.menuItemId.replace("translate-to-", "");
-    console.log(`[Translator] Translate to '${targetLang}' (${LANGUAGE_NAMES[targetLang]}) menu clicked`);
+  // Check if it's a service-specific language menu item
+  let service = null;
+  let targetLang = null;
 
-    // Save the selected language for this session
-    currentSessionLanguage = targetLang;
+  if (info.menuItemId.startsWith("ollama-")) {
+    service = "ollama";
+    targetLang = info.menuItemId.replace("ollama-", "");
+  } else if (info.menuItemId.startsWith("google-")) {
+    service = "google";
+    targetLang = info.menuItemId.replace("google-", "");
+  } else if (info.menuItemId.startsWith("libre-")) {
+    service = "libretranslate";
+    targetLang = info.menuItemId.replace("libre-", "");
+  }
+
+  if (service && targetLang) {
+    console.log(`[Translator] ${service} - Translate to '${targetLang}' (${LANGUAGE_NAMES[targetLang]}) menu clicked`);
+
+    // Save the selected language permanently for this service
+    const storageKey = service === "ollama" ? "ollamaTargetLang" :
+                       service === "google" ? "googleTargetLang" :
+                       "libreTargetLang";
+
+    await messenger.storage.local.set({
+      [storageKey]: targetLang,
+      service: service,
+      targetLanguage: targetLang // Keep this for backward compatibility
+    });
+
+    console.log(`[Translator] Saved ${storageKey} = ${targetLang}, service = ${service}`);
 
     // Get the active message tab
     const tabs = await messenger.tabs.query({ active: true, lastFocusedWindow: true });
@@ -413,7 +473,7 @@ messenger.menus.onClicked.addListener(async (info, tab) => {
           console.log("[Translator] Sending startTranslation command with target:", targetLang);
           activePort.postMessage({
             command: "startTranslation",
-            targetLanguage: targetLang // Pass the selected language
+            targetLanguage: targetLang
           });
         } else {
           console.error("[Translator] Still no active port after injection");
@@ -466,16 +526,31 @@ messenger.runtime.onMessage.addListener(async (message, sender) => {
 
   if (message.command === "saveSettings") {
     // Aggiorna il menu quando cambiano le impostazioni
-    await messenger.storage.local.set({
-      service: message.service || DEFAULT_SERVICE,
-      targetLanguage: message.targetLanguage || DEFAULT_TARGET_LANGUAGE,
+    const targetLang = message.targetLanguage || DEFAULT_TARGET_LANGUAGE;
+    const service = message.service || DEFAULT_SERVICE;
+
+    // Update service-specific language based on current service
+    const storageData = {
+      service: service,
+      targetLanguage: targetLang,
       ollamaUrl: message.ollamaUrl,
       model: message.model,
-    });
-    
+    };
+
+    // Update the appropriate service-specific language
+    if (service === "ollama") {
+      storageData.ollamaTargetLang = targetLang;
+    } else if (service === "google") {
+      storageData.googleTargetLang = targetLang;
+    } else if (service === "libretranslate") {
+      storageData.libreTargetLang = targetLang;
+    }
+
+    await messenger.storage.local.set(storageData);
+
     // Ricrea il menu con la nuova lingua
     createContextMenu();
-    
+
     return { success: true };
   }
 });
