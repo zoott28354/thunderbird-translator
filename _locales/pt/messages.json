@@ -1,0 +1,126 @@
+{
+  "appName": {
+    "message": "Thunderbird Translator",
+    "description": "Nome da aplicação"
+  },
+  "appDescription": {
+    "message": "Traduzir emails usando Ollama, Google Translate ou LibreTranslate",
+    "description": "Descrição da aplicação"
+  },
+  "noText": {
+    "message": "Nenhum texto para traduzir",
+    "description": "Mensagem quando nenhum texto é encontrado"
+  },
+  "translationService": {
+    "message": "Serviço de tradução",
+    "description": "Rótulo para seleção de serviço"
+  },
+  "targetLanguage": {
+    "message": "Idioma de destino",
+    "description": "Rótulo para seleção de idioma"
+  },
+  "ollamaUrl": {
+    "message": "URL do servidor Ollama",
+    "description": "Rótulo para URL do servidor Ollama"
+  },
+  "model": {
+    "message": "Modelo",
+    "description": "Rótulo para seleção de modelo"
+  },
+  "selectModel": {
+    "message": "-- Selecionar modelo --",
+    "description": "Marcador no menu suspenso de modelos"
+  },
+  "testConnection": {
+    "message": "Testar conexão",
+    "description": "Botão para testar a conexão"
+  },
+  "save": {
+    "message": "Salvar",
+    "description": "Botão para salvar as configurações"
+  },
+  "refresh": {
+    "message": "Atualizar lista de modelos",
+    "description": "Dica do botão de atualização"
+  },
+  "translateTo": {
+    "message": "Traduzir para",
+    "description": "Prefixo do menu contextual"
+  },
+  "showOriginal": {
+    "message": "Mostrar original",
+    "description": "Menu para mostrar texto original"
+  },
+  "showTranslation": {
+    "message": "Mostrar tradução",
+    "description": "Menu para mostrar tradução"
+  },
+  "translateButton": {
+    "message": "🌐 Traduzir",
+    "description": "Texto do botão de tradução"
+  },
+  "translating": {
+    "message": "Traduzindo...",
+    "description": "Mensagem durante a tradução"
+  },
+  "translationError": {
+    "message": "Erro de tradução",
+    "description": "Mensagem de erro"
+  },
+  "connectionFailed": {
+    "message": "Falha na conexão: {error}",
+    "description": "Mensagem de erro de conexão",
+    "placeholders": {
+      "error": {
+        "content": "$1",
+        "example": "Servidor inacessível"
+      }
+    }
+  },
+  "connectionSuccess": {
+    "message": "Conexão bem-sucedida! {count} modelos encontrados.",
+    "description": "Mensagem de conexão bem-sucedida",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "urlRequired": {
+    "message": "Digite a URL do servidor Ollama",
+    "description": "Mensagem de validação"
+  },
+  "modelRequired": {
+    "message": "Selecione um modelo",
+    "description": "Mensagem de validação"
+  },
+  "settingsSaved": {
+    "message": "Configurações salvas",
+    "description": "Mensagem de sucesso"
+  },
+  "modelsRefreshed": {
+    "message": "Lista de modelos atualizada",
+    "description": "Mensagem de atualização de modelos"
+  },
+  "noModelsFound": {
+    "message": "-- Nenhum modelo instalado --",
+    "description": "Mensagem quando nenhum modelo é encontrado"
+  },
+  "cannotLoadModels": {
+    "message": "-- Não é possível carregar os modelos --",
+    "description": "Mensagem quando os modelos não podem ser carregados"
+  },
+  "saved": {
+    "message": "(salvo)",
+    "description": "Sufixo para modelo salvo"
+  },
+  "notFound": {
+    "message": "(não encontrado)",
+    "description": "Sufixo para modelo não encontrado"
+  },
+  "contextMenuTitle": {
+    "message": "Traduzir com Ollama",
+    "description": "Título do menu contextual"
+  }
+}
