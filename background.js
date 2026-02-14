@@ -114,10 +114,14 @@ messenger.runtime.onConnect.addListener((port) => {
     }
 
     if (message.command === "translate") {
+      console.log(`[Translator] Received translate request, id: ${message.id}, text length: ${message.text?.length || 0}`);
       try {
         const settings = await getSettings();
+        console.log(`[Translator] Settings loaded:`, settings);
         const translated = await translateText(message.text, settings);
+        console.log(`[Translator] Translation completed, sending response. Translated length: ${translated?.length || 0}`);
         port.postMessage({ id: message.id, success: true, translated });
+        console.log(`[Translator] Response sent to content script`);
       } catch (e) {
         console.error("[Translator] Translation error:", e);
         port.postMessage({ id: message.id, success: false, error: e.message });
@@ -180,11 +184,8 @@ Text: ${text}`;
 // --- Google Translate API (non-official, free) ---
 
 async function translateWithGoogle(text, targetLanguage) {
-  // Usa l'API di Google Translate non-ufficiale
-  // Simula una richiesta come farebbe un browser
-  const url = "https://translate.googleapis.com/translate_a/element.js";
-  
-  // Fallback usando l'API di translate.google.com
+  console.log("[Translator] Google Translate called with target:", targetLanguage);
+
   const params = new URLSearchParams({
     client: "gtx",
     sl: "auto",
@@ -193,21 +194,42 @@ async function translateWithGoogle(text, targetLanguage) {
     q: text,
   });
 
-  const response = await fetch(`https://translate.google.com/translate_a/single?${params}`, {
+  const url = `https://translate.google.com/translate_a/single?${params}`;
+  console.log("[Translator] Google Translate URL:", url);
+
+  const response = await fetch(url, {
     method: "GET",
     headers: {
       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
     },
   });
 
+  console.log("[Translator] Google Translate response status:", response.status);
+
   if (!response.ok) {
     throw new Error(`Google Translate error: ${response.status}`);
   }
 
   const data = await response.json();
-  // Array structure: [[[translated_text, original_text, ...]], ...]
-  if (data && data[0] && data[0][0] && data[0][0][0]) {
-    return data[0][0][0].trim();
+  console.log("[Translator] Google Translate response data:", JSON.stringify(data).substring(0, 200));
+
+  // Google Translate returns: [[[translated_part1, original_part1, ...], [translated_part2, original_part2, ...]], ...]
+  // We need to concatenate all translated parts from data[0]
+  if (data && data[0] && Array.isArray(data[0])) {
+    const translatedParts = [];
+
+    for (const part of data[0]) {
+      if (part && part[0]) {
+        translatedParts.push(part[0]);
+      }
+    }
+
+    if (translatedParts.length > 0) {
+      const translated = translatedParts.join("").trim();
+      console.log(`[Translator] Google Translate result: ${translatedParts.length} parts, total length: ${translated.length}`);
+      console.log("[Translator] First 100 chars:", translated.substring(0, 100));
+      return translated;
+    }
   }
 
   throw new Error("Invalid response from Google Translate");
@@ -216,46 +238,87 @@ async function translateWithGoogle(text, targetLanguage) {
 // --- LibreTranslate API (free public instance) ---
 
 async function translateWithLibreTranslate(text, targetLanguage) {
-  const url = "https://libretranslate.de/translate";
+  console.log("[Translator] LibreTranslate called with target:", targetLanguage);
 
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      q: text,
-      source: "auto",
-      target: targetLanguage,
-    }),
-  });
+  // Try multiple LibreTranslate instances
+  const instances = [
+    "https://translate.fedilab.app/translate",
+    "https://libretranslate.com/translate",
+    "https://translate.argosopentech.com/translate",
+  ];
 
-  if (!response.ok) {
-    throw new Error(`LibreTranslate error: ${response.status}`);
+  let lastError = null;
+
+  for (const url of instances) {
+    try {
+      console.log("[Translator] Trying LibreTranslate instance:", url);
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          q: text,
+          source: "auto",
+          target: targetLanguage,
+        }),
+      });
+
+      console.log("[Translator] LibreTranslate response status:", response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log("[Translator] LibreTranslate error response:", errorText);
+        throw new Error(`LibreTranslate error: ${response.status} - ${errorText.substring(0, 100)}`);
+      }
+
+      const data = await response.json();
+      console.log("[Translator] LibreTranslate response data:", JSON.stringify(data).substring(0, 200));
+
+      if (data && data.translatedText) {
+        console.log("[Translator] LibreTranslate result:", data.translatedText.substring(0, 100));
+        return data.translatedText.trim();
+      }
+
+      if (data && data.error) {
+        throw new Error(`LibreTranslate API error: ${data.error}`);
+      }
+
+      throw new Error("Invalid response from LibreTranslate: missing translatedText field");
+    } catch (e) {
+      console.warn(`[Translator] LibreTranslate instance ${url} failed:`, e.message);
+      lastError = e;
+      // Try next instance
+    }
   }
 
-  const data = await response.json();
-  if (data && data.translatedText) {
-    return data.translatedText.trim();
-  }
-
-  throw new Error("Invalid response from LibreTranslate");
+  // All instances failed
+  throw new Error(`LibreTranslate: All instances failed. Last error: ${lastError.message}`);
 }
 
 // --- Main Translation Function ---
 
 async function translateText(text, settings) {
-  const { service } = settings;
-  
+  const { service, targetLanguage } = settings;
+
+  console.log(`[Translator] translateText called - service: ${service}, target: ${targetLanguage}, text length: ${text.length}`);
+
   try {
+    let result;
     switch (service) {
       case "ollama":
-        return await translateWithOllama(text, settings);
+        result = await translateWithOllama(text, settings);
+        break;
       case "google":
-        return await translateWithGoogle(text, settings.targetLanguage);
+        result = await translateWithGoogle(text, targetLanguage);
+        break;
       case "libretranslate":
-        return await translateWithLibreTranslate(text, settings.targetLanguage);
+        result = await translateWithLibreTranslate(text, targetLanguage);
+        break;
       default:
         throw new Error(`Unknown service: ${service}`);
     }
+    console.log(`[Translator] Translation successful, result length: ${result?.length || 0}`);
+    return result;
   } catch (e) {
     console.error(`[Translator] ${service} error:`, e);
     throw e;
