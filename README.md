@@ -20,14 +20,54 @@ Un addon per Thunderbird che traduce le email in italiano usando un'istanza loca
 
 1. **Ollama** - Installato e in esecuzione sul tuo PC
    - Scarica da: https://ollama.ai
-   - Deve essere in esecuzione sulla porta `11434`(default)
-   - **IMPORTANTE**: Configura `OLLAMA_ORIGINS="*"` per permettere l'accesso dall'estensione
+   - Deve essere in esecuzione sulla porta `11434` (default)
 
-2. **Un modello Ollama** - Scaricato e caricato
+2. **⚠️ CONFIGURAZIONE OBBLIGATORIA - OLLAMA_ORIGINS**
+
+   **Perché è necessario?**
+   Per motivi di sicurezza, Ollama blocca le richieste da estensioni browser. Devi configurare la variabile d'ambiente `OLLAMA_ORIGINS="*"` per permettere all'addon di comunicare con Ollama.
+
+   **Come configurarlo:**
+
+   **Windows PowerShell (temporaneo - solo per la sessione corrente):**
+   ```powershell
+   $env:OLLAMA_ORIGINS="*"
+   ollama serve
+   ```
+
+   **Windows PowerShell (permanente):**
+   ```powershell
+   # Imposta la variabile d'ambiente permanentemente
+   [System.Environment]::SetEnvironmentVariable('OLLAMA_ORIGINS', '*', 'User')
+
+   # Riavvia Ollama
+   ollama serve
+   ```
+
+   **Linux/Mac (temporaneo):**
+   ```bash
+   export OLLAMA_ORIGINS="*"
+   ollama serve
+   ```
+
+   **Linux/Mac (permanente - aggiungi al tuo ~/.bashrc o ~/.zshrc):**
+   ```bash
+   echo 'export OLLAMA_ORIGINS="*"' >> ~/.bashrc
+   source ~/.bashrc
+   ollama serve
+   ```
+
+   **⚠️ Nota sulla sicurezza:**
+   `OLLAMA_ORIGINS="*"` permette a qualsiasi origine di accedere a Ollama. Se preferisci maggiore sicurezza, puoi specificare solo l'estensione:
+   ```bash
+   OLLAMA_ORIGINS="moz-extension://*"
+   ```
+
+3. **Un modello Ollama** - Scaricato e caricato
    - **Raccomandato**: `ollama pull translategemma` (3GB, ottimizzato per traduzioni)
    - Alternative: `ollama pull llama3.2` o `ollama pull mistral`
 
-3. **Thunderbird** - Versione 128 o superiore
+4. **Thunderbird** - Versione 128 o superiore
 
 ### Per usare Google Translate o LibreTranslate (online, gratuiti)
 
@@ -75,7 +115,11 @@ Un addon per Thunderbird che traduce le email in italiano usando un'istanza loca
 
 ### Se usi Ollama:
 
-4. **Configura OLLAMA_ORIGINS** (importante!):
+4. **⚠️ PRIMO PASSO OBBLIGATORIO - Configura OLLAMA_ORIGINS**:
+
+   **Prima** di usare l'addon con Ollama, devi configurare questa variabile d'ambiente (vedi sezione "Requisiti" sopra per istruzioni dettagliate).
+
+   Verifica rapida - apri PowerShell/Terminal:
    ```bash
    # Windows PowerShell:
    $env:OLLAMA_ORIGINS="*"
@@ -85,6 +129,8 @@ Un addon per Thunderbird che traduce le email in italiano usando un'istanza loca
    export OLLAMA_ORIGINS="*"
    ollama serve
    ```
+
+   **Senza questa configurazione, riceverai l'errore "403 Forbidden"!**
 
 5. **Inserisci l'URL di Ollama**:
    - Default: `http://localhost:11434`
@@ -162,18 +208,49 @@ Nessun accesso a:
 - Prova un'altra email
 - Controlla che l'addon sia abilitato
 
-### "Errore: Ollama error: 403 Forbidden"
-- **CAUSA**: Ollama blocca richieste dalle estensioni browser
-- **SOLUZIONE**: Configura `OLLAMA_ORIGINS="*"` prima di avviare Ollama:
-  ```bash
-  # Windows PowerShell:
-  $env:OLLAMA_ORIGINS="*"
-  ollama serve
+### "Errore: Ollama error: 403 Forbidden" ⚠️
 
-  # Oppure permanente:
-  setx OLLAMA_ORIGINS "*"
-  # Poi riavvia Ollama
-  ```
+**CAUSA**: Ollama blocca le richieste dalle estensioni browser per motivi di sicurezza.
+
+**SOLUZIONE COMPLETA**:
+
+1. **Ferma Ollama** se è in esecuzione (Ctrl+C nel terminale dove gira `ollama serve`)
+
+2. **Configura la variabile d'ambiente**:
+
+   **Windows PowerShell (permanente - RACCOMANDATO):**
+   ```powershell
+   # Imposta variabile d'ambiente permanente
+   [System.Environment]::SetEnvironmentVariable('OLLAMA_ORIGINS', '*', 'User')
+
+   # Verifica che sia impostata
+   [System.Environment]::GetEnvironmentVariable('OLLAMA_ORIGINS', 'User')
+   # Dovrebbe mostrare: *
+   ```
+
+   **Windows PowerShell (temporaneo - solo questa sessione):**
+   ```powershell
+   $env:OLLAMA_ORIGINS="*"
+   ```
+
+   **Linux/Mac (permanente - RACCOMANDATO):**
+   ```bash
+   echo 'export OLLAMA_ORIGINS="*"' >> ~/.bashrc
+   source ~/.bashrc
+   ```
+
+3. **Riavvia Ollama**:
+   ```bash
+   ollama serve
+   ```
+
+4. **Verifica la configurazione**:
+   - Apri Thunderbird
+   - Vai nelle impostazioni dell'addon
+   - Clicca "Test connessione"
+   - Dovrebbe mostrare "Connessione riuscita: X modelli disponibili"
+
+**Nota**: Se usi `moz-extension://*` invece di `*`, funzionerà solo per le estensioni Firefox/Thunderbird (più sicuro).
 
 ### "Errore: Ollama non raggiungibile"
 - Avvia Ollama: `ollama serve`
