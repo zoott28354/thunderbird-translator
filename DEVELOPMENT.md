@@ -9,6 +9,7 @@
   - [x] Google Translate (online, gratuito)
   - [x] LibreTranslate (online, open-source)
 - [x] **Traduzione multilingua** (10 lingue supportate)
+- [x] **Interfaccia multilingue** (7 lingue): 🇮🇹 IT, 🇬🇧 EN, 🇩🇪 DE, 🇫🇷 FR, 🇪🇸 ES, 🇵🇹 PT, 🇷🇺 RU
 - [x] **Menu contestuale per servizio** - 3 menu parent separati (Ollama, Google, LibreTranslate)
 - [x] **Lingua indipendente per servizio** - Ogni servizio ricorda la propria lingua target
 - [x] **Evidenziazione grassetto** - Lingua selezionata mostrata in bold nel menu
@@ -154,7 +155,7 @@ async function startTranslation() { ... }
 btn.style.cssText = `...`  // ← Modificare CSS qui
 ```
 
-## 🐛 Problemi Risolti (v1.0.1)
+## 🐛 Problemi Risolti (v2.0.0)
 
 | Problema | Stato | Commit |
 |----------|-------|--------|
@@ -163,6 +164,8 @@ btn.style.cssText = `...`  // ← Modificare CSS qui
 | LibreTranslate richiedeva API key | ✅ RISOLTO | 20bec9a |
 | Traduzioni multiple non funzionavano | ✅ RISOLTO | 20bec9a |
 | Ollama 403 Forbidden | ✅ RISOLTO (docs) | 20bec9a |
+| Menu contestuale hardcoded in italiano | ✅ RISOLTO | 29d5498 |
+| Interfaccia solo in 3 lingue | ✅ RISOLTO | 29d5498 |
 
 ## 🐛 Problemi Noti (da risolvere)
 
