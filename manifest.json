@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Thunderbird Ollama Translator",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Traduci le email in italiano usando un'istanza locale di Ollama",
   "author": "giulio",
   "default_locale": "en",
