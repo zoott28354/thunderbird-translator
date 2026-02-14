@@ -35,22 +35,35 @@ async function getSettings() {
 
 async function createContextMenu() {
   try {
-    const result = await messenger.storage.local.get(["targetLanguage", "service"]);
-    const targetLang = result.targetLanguage || DEFAULT_TARGET_LANGUAGE;
-    const langName = LANGUAGE_NAMES[targetLang] || targetLang;
-    const title = browser.i18n.getMessage("translateTo") + " " + langName;
-    
-    try {
+    const result = await messenger.storage.local.get(["targetLanguage"]);
+    const defaultLang = result.targetLanguage || DEFAULT_TARGET_LANGUAGE;
+
+    // Remove all existing menus first
+    await messenger.menus.removeAll();
+
+    // Create parent menu item
+    const translateTitle = browser.i18n.getMessage("translateTo") || "Translate to";
+    messenger.menus.create({
+      id: "translate-parent",
+      title: `${translateTitle} ▶`,
+      contexts: ["all"],
+    });
+
+    // Create submenu for each language
+    const languages = Object.keys(LANGUAGE_NAMES);
+    for (const langCode of languages) {
+      const langName = LANGUAGE_NAMES[langCode];
+      const isDefault = langCode === defaultLang;
+
       messenger.menus.create({
-        id: "translate-lang",
-        title: title,
+        id: `translate-to-${langCode}`,
+        parentId: "translate-parent",
+        title: isDefault ? `✓ ${langName}` : `  ${langName}`,
         contexts: ["all"],
       });
-      console.log("[Translator] Menu created: " + title);
-    } catch (e) {
-      // Menu exists, update it
-      messenger.menus.update("translate-lang", { title });
     }
+
+    console.log(`[Translator] Menu created with ${languages.length} language options. Default: ${LANGUAGE_NAMES[defaultLang]}`);
   } catch (e) {
     console.warn("[Translator] Error in createContextMenu:", e.message);
   }
@@ -116,7 +129,17 @@ messenger.runtime.onConnect.addListener((port) => {
     if (message.command === "translate") {
       console.log(`[Translator] Received translate request, id: ${message.id}, text length: ${message.text?.length || 0}`);
       try {
-        const settings = await getSettings();
+        let settings = await getSettings();
+
+        // Override targetLanguage if provided in message (from menu selection)
+        if (message.targetLanguage) {
+          settings = { ...settings, targetLanguage: message.targetLanguage };
+          console.log(`[Translator] Using target language from menu: ${message.targetLanguage}`);
+        } else if (currentSessionLanguage) {
+          settings = { ...settings, targetLanguage: currentSessionLanguage };
+          console.log(`[Translator] Using current session language: ${currentSessionLanguage}`);
+        }
+
         console.log(`[Translator] Settings loaded:`, settings);
         const translated = await translateText(message.text, settings);
         console.log(`[Translator] Translation completed, sending response. Translated length: ${translated?.length || 0}`);
@@ -340,12 +363,20 @@ async function getInstalledModels(ollamaUrl) {
 let toggleMenuCreated = false;
 let showingOriginal = false;
 
+// --- Current Session Language (runtime only, not persisted) ---
+let currentSessionLanguage = null;
+
 // --- Event Handlers ---
 
 messenger.menus.onClicked.addListener(async (info, tab) => {
-  if (info.menuItemId === "translate-lang") {
-    console.log("[Translator] 'Traduci' menu clicked. Tab:", tab ? tab.id : "unknown");
-    
+  // Check if it's a language submenu item
+  if (info.menuItemId.startsWith("translate-to-")) {
+    const targetLang = info.menuItemId.replace("translate-to-", "");
+    console.log(`[Translator] Translate to '${targetLang}' (${LANGUAGE_NAMES[targetLang]}) menu clicked`);
+
+    // Save the selected language for this session
+    currentSessionLanguage = targetLang;
+
     // Get the active message tab
     const tabs = await messenger.tabs.query({ active: true, lastFocusedWindow: true });
     if (!tabs.length) {
@@ -367,8 +398,11 @@ messenger.menus.onClicked.addListener(async (info, tab) => {
       // Wait a bit for the script to connect
       setTimeout(() => {
         if (activePort) {
-          console.log("[Translator] Sending startTranslation command");
-          activePort.postMessage({ command: "startTranslation" });
+          console.log("[Translator] Sending startTranslation command with target:", targetLang);
+          activePort.postMessage({
+            command: "startTranslation",
+            targetLanguage: targetLang // Pass the selected language
+          });
         } else {
           console.error("[Translator] Still no active port after injection");
         }
