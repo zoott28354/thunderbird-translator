@@ -118,5 +118,9 @@
   "notFound": {
     "message": "(non trovato)",
     "description": "Suffisso per modello non trovato"
+  },
+  "contextMenuTitle": {
+    "message": "Traduci con Ollama",
+    "description": "Titolo menu contestuale"
   }
 }

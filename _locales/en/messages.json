@@ -118,5 +118,9 @@
   "notFound": {
     "message": "(not found)",
     "description": "Suffix for not found model"
+  },
+  "contextMenuTitle": {
+    "message": "Translate with Ollama ▶",
+    "description": "Context menu parent title"
   }
 }
