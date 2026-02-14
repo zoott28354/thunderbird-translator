@@ -33,17 +33,21 @@ async function getSettings() {
 
 // --- Context Menu ---
 
+let menuCreated = false;
+
 async function createContextMenu() {
   try {
     const result = await messenger.storage.local.get(["targetLanguage"]);
     const defaultLang = result.targetLanguage || DEFAULT_TARGET_LANGUAGE;
 
-    // Remove all existing menus first
-    await messenger.menus.removeAll();
+    // Remove all existing menus first (only if already created)
+    if (menuCreated) {
+      await messenger.menus.removeAll();
+    }
 
     // Create parent menu item
     const translateTitle = browser.i18n.getMessage("translateTo") || "Translate to";
-    messenger.menus.create({
+    await messenger.menus.create({
       id: "translate-parent",
       title: `${translateTitle} ▶`,
       contexts: ["all"],
@@ -55,7 +59,7 @@ async function createContextMenu() {
       const langName = LANGUAGE_NAMES[langCode];
       const isDefault = langCode === defaultLang;
 
-      messenger.menus.create({
+      await messenger.menus.create({
         id: `translate-to-${langCode}`,
         parentId: "translate-parent",
         title: isDefault ? `✓ ${langName}` : `  ${langName}`,
@@ -63,20 +67,28 @@ async function createContextMenu() {
       });
     }
 
+    menuCreated = true;
     console.log(`[Translator] Menu created with ${languages.length} language options. Default: ${LANGUAGE_NAMES[defaultLang]}`);
   } catch (e) {
     console.warn("[Translator] Error in createContextMenu:", e.message);
   }
 }
 
-// --- Initialize context menu on startup ---
+// --- Initialize context menu on startup and install ---
 messenger.runtime.onStartup.addListener(() => {
+  console.log("[Translator] Extension started, creating menu");
+  createContextMenu();
+});
+
+messenger.runtime.onInstalled.addListener(() => {
+  console.log("[Translator] Extension installed, creating menu");
   createContextMenu();
 });
 
 // --- Update context menu when settings change ---
 messenger.storage.onChanged.addListener((changes, area) => {
-  if (area === "local" && (changes.targetLanguage || changes.service)) {
+  if (area === "local" && changes.targetLanguage) {
+    console.log("[Translator] Target language changed, updating menu");
     createContextMenu();
   }
 });
