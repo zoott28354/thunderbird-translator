@@ -1,6 +1,6 @@
 # Thunderbird Ollama Translator - Documentazione Sviluppo
 
-## 📊 Stato Attuale (v1.0.0)
+## 📊 Stato Attuale (v2.0.0)
 
 ### ✅ Funzionalità Implementate
 
@@ -262,8 +262,8 @@ Se il progetto cresce:
 - **Author**: giulio
 - **License**: MIT
 - **Created**: Febbraio 2026
-- **Status**: Stable (v1.0.0)
+- **Status**: Stable (v2.0.0)
 
 ---
 
-**Last Updated**: 14 Febbraio 2026 (dopo fix CORS e traduzioni multiple)
+**Last Updated**: 14 Febbraio 2026 (v2.0.0 - menu per servizio, fix settings, translategemma default)
