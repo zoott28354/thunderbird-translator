@@ -45,6 +45,9 @@
   const pendingRequests = new Map();
   let nextRequestId = 0;
 
+  // Current target language (set by menu selection)
+  let targetLanguage = null;
+
   port.onMessage.addListener((message) => {
     console.log("[Translator Content Script] Received message:", message.command || `id:${message.id}`, message);
 
@@ -76,6 +79,11 @@
     // Commands from background
     if (message.command === "startTranslation") {
       console.log("[Translator Content Script] Starting translation...");
+      // Save target language if provided
+      if (message.targetLanguage) {
+        targetLanguage = message.targetLanguage;
+        console.log(`[Translator Content Script] Target language set to: ${targetLanguage}`);
+      }
       startTranslation();
     } else if (message.command === "toggleOriginal") {
       console.log("[Translator Content Script] Toggling original/translation");
@@ -97,7 +105,14 @@
     return new Promise((resolve, reject) => {
       const id = nextRequestId++;
       pendingRequests.set(id, { resolve, reject });
-      port.postMessage({ command: "translate", id, text });
+
+      // Include targetLanguage if set
+      const message = { command: "translate", id, text };
+      if (targetLanguage) {
+        message.targetLanguage = targetLanguage;
+      }
+
+      port.postMessage(message);
     });
   }
 
