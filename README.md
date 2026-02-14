@@ -12,7 +12,7 @@ Un addon per Thunderbird che traduce le email in italiano usando un'istanza loca
 - **Pulsante veloce** - Alternativa al menu contestuale
 - **Toggle** - Passa facilmente tra testo originale e tradotto
 - **Impostazioni persistenti** - Le tue configurazioni si salvano automaticamente
-- **Interfaccia localizzata** - Supporto per diverse lingue
+- **Interfaccia multilingue** - L'addon è disponibile in 7 lingue: 🇮🇹 Italiano, 🇬🇧 English, 🇩🇪 Deutsch, 🇫🇷 Français, 🇪🇸 Español, 🇵🇹 Português, 🇷🇺 Русский (si adatta automaticamente alla lingua di Thunderbird)
 
 ## 📋 Requisiti
 
