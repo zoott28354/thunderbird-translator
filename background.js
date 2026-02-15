@@ -224,7 +224,7 @@ messenger.runtime.onConnect.addListener((port) => {
       toggleMenuCreated = true;
       showingOriginal = false;
       try {
-        messenger.menus.create({
+        await messenger.menus.create({
           id: "toggle-original",
           title: browser.i18n.getMessage("showOriginal"),
           contexts: ["all"],
