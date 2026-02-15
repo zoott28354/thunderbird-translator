@@ -13,7 +13,6 @@ Un addon per Thunderbird che traduce le email in più lingue usando Ollama, Goog
 - **Supporta diversi servizi di traduzione** - Ollama, Google Translate, LibreTranslate
 - **Traduzione in più lingue** - Supporta 10 lingue: Italiano, English, Español, Français, Deutsch, Português, Русский, 日本語, 中文, 한국어
 - **Interfaccia semplice** - Fai clic destro sulla email e scegli il servizio e la lingua
-- **Pulsante veloce** - Alternativa al menu contestuale
 - **Toggle** - Passa facilmente tra testo originale e tradotto
 - **Impostazioni persistenti** - Le tue configurazioni si salvano automaticamente
 - **Interfaccia multilingue** - L'addon è disponibile in 7 lingue: 🇮🇹 Italiano, 🇬🇧 English, 🇩🇪 Deutsch, 🇫🇷 Français, 🇪🇸 Español, 🇵🇹 Português, 🇷🇺 Русский (si adatta automaticamente alla lingua di Thunderbird)
@@ -128,12 +127,6 @@ OLLAMA_ORIGINS=moz-extension://*,http://localhost:11434
 5. Attendi il messaggio "Traduzione completata"
 
 **Esempio**: Se selezioni "Traduci con Google Translate > Español", tutte le successive traduzioni con Google Translate saranno in spagnolo (finché non scegli un'altra lingua).
-
-### Metodo Alternativo: Pulsante Veloce
-1. **Apri una email**
-2. Guarda l'**angolo in alto a destra** della email
-3. Clicca il **pulsante blu** 🌐 **"Translate"**
-4. Verrà usato il servizio e la lingua configurati nelle impostazioni
 
 ### Toggle Originale/Traduzione
 - Dopo la traduzione, fai **clic destro** sul testo

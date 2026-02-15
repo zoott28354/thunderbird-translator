@@ -188,7 +188,6 @@ messenger.runtime.onConnect.addListener((port) => {
       port.postMessage({
         command: "messages",
         data: {
-          translateButton: getMsg("translateButton", "🌐 Translate"),
           noText: getMsg("noText", "No text to translate"),
           translating: getMsg("translating", "Translating..."),
           success: getMsg("translationComplete", "Translation complete!"),

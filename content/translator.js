@@ -28,7 +28,6 @@
 
   // Translation messages - will be loaded from background
   let messages = {
-    "translateButton": "🌐 Translate",
     "noText": "No text to translate",
     "translating": "Translating...",
     "success": "Translation complete!",
@@ -93,13 +92,6 @@
 
   // Request translation messages from background
   port.postMessage({ command: "getMessages" });
-
-  // Create button when DOM is ready
-  if (document.body) {
-    createTranslateButton();
-  } else {
-    document.addEventListener("DOMContentLoaded", createTranslateButton);
-  }
 
   function sendTranslateRequest(text) {
     return new Promise((resolve, reject) => {
@@ -219,53 +211,6 @@
 
     return Array.from(blocks.values());
   }
-
-  // --- UI Button for Translation ---
-
-  function createTranslateButton() {
-    if (document.getElementById("ollama-translate-btn")) {
-      return; // Already exists
-    }
-
-    const btn = document.createElement("button");
-    btn.id = "ollama-translate-btn";
-    btn.className = "ollama-translate-btn";
-    btn.textContent = messages.translateButton;
-    btn.style.cssText = `
-      position: fixed;
-      top: 60px;
-      right: 20px;
-      padding: 8px 16px;
-      background: #0060df;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      z-index: 10000;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    `;
-
-    btn.addEventListener("click", () => {
-      console.log("[Translator] Translate button clicked");
-      startTranslation();
-    });
-
-    btn.addEventListener("mouseover", () => {
-      btn.style.background = "#003eaa";
-    });
-
-    btn.addEventListener("mouseout", () => {
-      btn.style.background = "#0060df";
-    });
-
-    document.body.appendChild(btn);
-    console.log("[Translator] Translate button added to page");
-  }
-
-  // Create button immediately and also when page loads
-  createTranslateButton();
-  window.addEventListener("load", createTranslateButton);
 
   // --- Translation Logic ---
 

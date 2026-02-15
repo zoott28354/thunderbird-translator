@@ -120,7 +120,7 @@
     "description": "Suffix for not found model"
   },
   "contextMenuTitle": {
-    "message": "Translate with Ollama ▶",
+    "message": "Translate with Ollama",
     "description": "Context menu parent title"
   }
 }
