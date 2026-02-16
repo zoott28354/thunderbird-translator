@@ -206,7 +206,7 @@
       const nodeData = nodeMap.get(textNode);
       const textToUse = nodeData && nodeData.original ? nodeData.original : textNode.textContent.trim();
 
-      block.text += (block.text ? " " : "") + textToUse;
+      block.text += (block.text ? "\n" : "") + textToUse;
     }
 
     return Array.from(blocks.values());
