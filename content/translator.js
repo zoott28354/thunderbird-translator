@@ -9,7 +9,7 @@
 
   const SKIP_TAGS = new Set([
     "SCRIPT", "STYLE", "NOSCRIPT", "IFRAME", "OBJECT", "EMBED",
-    "SVG", "MATH", "CODE", "PRE", "TEXTAREA", "INPUT",
+    "SVG", "MATH", "CODE", "TEXTAREA", "INPUT",
   ]);
 
   const BLOCK_TAGS = new Set([
