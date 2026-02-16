@@ -15,7 +15,7 @@
   const BLOCK_TAGS = new Set([
     "P", "DIV", "TD", "TH", "LI", "H1", "H2", "H3", "H4", "H5", "H6",
     "BLOCKQUOTE", "CAPTION", "DT", "DD", "FIGCAPTION", "ARTICLE", "SECTION",
-    "HEADER", "FOOTER", "TR",
+    "HEADER", "FOOTER", "TR", "PRE",
   ]);
 
   const MIN_TEXT_LENGTH = 3;
@@ -216,26 +216,49 @@
 
   function applyTranslation(block, translatedText) {
     if (block.nodes.length === 1) {
+      // Single node: simple case
       const node = block.nodes[0];
       const existingData = nodeMap.get(node);
 
-      // Preserve original text if already translated before
       nodeMap.set(node, {
         original: existingData && existingData.original ? existingData.original : node.textContent,
         translated: translatedText,
       });
       node.textContent = translatedText;
     } else {
+      // Multiple nodes: split translation intelligently by newlines
+      // LLMs typically preserve line structure in translations
+      const translatedLines = translatedText.split('\n').filter(line => line.trim().length > 0);
+
       for (let i = 0; i < block.nodes.length; i++) {
         const node = block.nodes[i];
         const existingData = nodeMap.get(node);
 
-        // Preserve original text if already translated before
+        // Map each node to a corresponding translated line
+        let nodeTranslation;
+
+        if (i < translatedLines.length) {
+          // We have a corresponding translated line
+          nodeTranslation = translatedLines[i];
+        } else if (translatedLines.length > 0) {
+          // Fewer translated lines than nodes: reuse last available line
+          nodeTranslation = translatedLines[translatedLines.length - 1];
+        } else {
+          // No translation available: keep original
+          nodeTranslation = existingData && existingData.original ? existingData.original : node.textContent;
+        }
+
+        // If this is the last node and there are extra translated lines, append them
+        if (i === block.nodes.length - 1 && translatedLines.length > block.nodes.length) {
+          const extraLines = translatedLines.slice(block.nodes.length);
+          nodeTranslation = nodeTranslation + '\n' + extraLines.join('\n');
+        }
+
         nodeMap.set(node, {
           original: existingData && existingData.original ? existingData.original : node.textContent,
-          translated: i === 0 ? translatedText : "",
+          translated: nodeTranslation,
         });
-        node.textContent = i === 0 ? translatedText : "";
+        node.textContent = nodeTranslation;
       }
     }
   }
