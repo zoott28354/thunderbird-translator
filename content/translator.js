@@ -276,29 +276,18 @@
     showToast(messages.translating);
 
     try {
-      // Combine ALL text blocks into one for better context
-      const allText = blocks.map(b => b.text).join("\n\n");
-      console.log(`[Translator] Total text length: ${allText.length} characters`);
-      console.log(`[Translator] First 100 chars to translate:`, allText.substring(0, 100));
+      // Detect email type: plain text emails have 1 block with multiple nodes
+      const isPlainTextEmail = blocks.length === 1 && blocks[0].nodes.length > 1;
 
-      // Translate everything at once
-      const fullTranslation = await sendTranslateRequest(allText);
-      console.log(`[Translator] Got full translation (length: ${fullTranslation?.length || 0}), applying to blocks...`);
-      console.log(`[Translator] First 200 chars of translation:`, fullTranslation?.substring(0, 200));
-
-      // Split the translation back into blocks (by double newlines)
-      const translatedParts = fullTranslation.split("\n\n");
-      console.log(`[Translator] Split into ${translatedParts.length} parts`);
-
-      // Apply translations to blocks
-      for (let i = 0; i < blocks.length; i++) {
-        const block = blocks[i];
-        let translatedText = translatedParts[i]?.trim() || block.text;
-        console.log(`[Translator] Applying translation to block ${i}: "${translatedText.substring(0, 50)}..."`);
-        applyTranslation(block, translatedText);
+      if (isPlainTextEmail) {
+        console.log(`[Translator] Detected plain text email with ${blocks[0].nodes.length} nodes - using node-by-node translation`);
+        await translateNodeByNode(blocks[0]);
+      } else {
+        console.log(`[Translator] Detected HTML email - using block translation`);
+        await translateByBlocks(blocks);
       }
 
-      console.log(`[Translator] Translation applied to ${blocks.length} blocks`);
+      console.log(`[Translator] Translation complete`);
       showToast(messages.success, true);
     } catch (e) {
       console.error("[Translator] Translation failed:", e);
@@ -312,6 +301,61 @@
 
     // Notify background that translation is complete (for toggle menu)
     port.postMessage({ command: "translationComplete" });
+  }
+
+  // Strategy 1: Translate each node separately (for plain text emails)
+  async function translateNodeByNode(block) {
+    console.log(`[Translator] Translating ${block.nodes.length} nodes individually`);
+
+    for (let i = 0; i < block.nodes.length; i++) {
+      const node = block.nodes[i];
+      const existingData = nodeMap.get(node);
+      const originalText = existingData && existingData.original
+        ? existingData.original
+        : node.textContent.trim();
+
+      if (originalText.length < MIN_TEXT_LENGTH) {
+        console.log(`[Translator] Skipping node ${i} (too short: ${originalText.length} chars)`);
+        continue;
+      }
+
+      console.log(`[Translator] Translating node ${i}/${block.nodes.length}: "${originalText.substring(0, 50)}..."`);
+      const translatedText = await sendTranslateRequest(originalText);
+      console.log(`[Translator] Got translation for node ${i}: "${translatedText.substring(0, 50)}..."`);
+
+      nodeMap.set(node, {
+        original: originalText,
+        translated: translatedText,
+      });
+      node.textContent = translatedText;
+    }
+  }
+
+  // Strategy 2: Translate blocks together (for HTML emails, preserves context)
+  async function translateByBlocks(blocks) {
+    // Combine ALL text blocks into one for better context
+    const allText = blocks.map(b => b.text).join("\n\n");
+    console.log(`[Translator] Total text length: ${allText.length} characters`);
+    console.log(`[Translator] First 100 chars to translate:`, allText.substring(0, 100));
+
+    // Translate everything at once
+    const fullTranslation = await sendTranslateRequest(allText);
+    console.log(`[Translator] Got full translation (length: ${fullTranslation?.length || 0}), applying to blocks...`);
+    console.log(`[Translator] First 200 chars of translation:`, fullTranslation?.substring(0, 200));
+
+    // Split the translation back into blocks (by double newlines)
+    const translatedParts = fullTranslation.split("\n\n");
+    console.log(`[Translator] Split into ${translatedParts.length} parts`);
+
+    // Apply translations to blocks
+    for (let i = 0; i < blocks.length; i++) {
+      const block = blocks[i];
+      let translatedText = translatedParts[i]?.trim() || block.text;
+      console.log(`[Translator] Applying translation to block ${i}: "${translatedText.substring(0, 50)}..."`);
+      applyTranslation(block, translatedText);
+    }
+
+    console.log(`[Translator] Translation applied to ${blocks.length} blocks`);
   }
 
   // --- Toggle Original / Translation ---
