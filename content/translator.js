@@ -298,20 +298,42 @@
     showToast(messages.translating);
 
     try {
-      // Detect email type: plain text emails have 1 block with multiple nodes
-      const isPlainTextEmail = blocks.length === 1 && blocks[0].nodes.length > 1;
+      // Detect blocks with PRE parent (plain text content)
+      const preBlocks = blocks.filter(block => {
+        return block.nodes.length > 0 &&
+               block.nodes[0].parentElement?.tagName === 'PRE';
+      });
+
+      const hasPlainTextContent = preBlocks.length > 0;
 
       // === DIAGNOSTIC LOGGING START ===
       console.log(`[Translator] ===== EMAIL TYPE DETECTION =====`);
-      console.log(`[Translator] - blocks.length: ${blocks.length}`);
-      console.log(`[Translator] - blocks[0].nodes.length: ${blocks.length > 0 ? blocks[0].nodes.length : 'N/A'}`);
-      console.log(`[Translator] - isPlainTextEmail: ${isPlainTextEmail}`);
-      console.log(`[Translator] - Strategy: ${isPlainTextEmail ? 'NODE-BY-NODE' : 'BLOCK TRANSLATION'}`);
+      console.log(`[Translator] - Total blocks: ${blocks.length}`);
+      console.log(`[Translator] - Blocks with PRE parent: ${preBlocks.length}`);
+      console.log(`[Translator] - Has plain text content: ${hasPlainTextContent}`);
+      if (hasPlainTextContent) {
+        preBlocks.forEach((block, i) => {
+          console.log(`[Translator] - PRE block ${i}: ${block.nodes.length} nodes, ${block.text.length} chars`);
+        });
+      }
+      console.log(`[Translator] - Strategy: ${hasPlainTextContent ? 'HYBRID (node-by-node for PRE blocks)' : 'BLOCK TRANSLATION'}`);
       // === DIAGNOSTIC LOGGING END ===
 
-      if (isPlainTextEmail) {
-        console.log(`[Translator] Detected plain text email with ${blocks[0].nodes.length} nodes - using node-by-node translation`);
-        await translateNodeByNode(blocks[0]);
+      if (hasPlainTextContent) {
+        console.log(`[Translator] Detected ${preBlocks.length} plain text blocks - using hybrid strategy`);
+
+        // Translate PRE blocks node-by-node
+        for (const preBlock of preBlocks) {
+          console.log(`[Translator] Translating PRE block with ${preBlock.nodes.length} nodes individually`);
+          await translateNodeByNode(preBlock);
+        }
+
+        // Translate remaining non-PRE blocks normally
+        const nonPreBlocks = blocks.filter(block => !preBlocks.includes(block));
+        if (nonPreBlocks.length > 0) {
+          console.log(`[Translator] Translating ${nonPreBlocks.length} HTML blocks normally`);
+          await translateByBlocks(nonPreBlocks);
+        }
       } else {
         console.log(`[Translator] Detected HTML email - using block translation`);
         await translateByBlocks(blocks);
