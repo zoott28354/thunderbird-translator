@@ -41,7 +41,7 @@ Um complemento do Thunderbird que traduz emails para vários idiomas usando Olla
 
 ### Método 1: Arquivo XPI (Recomendado)
 
-1. **Baixe** o arquivo `thunderbird-ollama-translator.xpi`
+1. **Baixe** o arquivo `thunderbird-translator.xpi`
 2. **Abra o Thunderbird**
 3. Vá para **Menu > Ferramentas > Complementos**
 4. Clique no ícone de engrenagem ⚙️ no canto superior direito
@@ -62,7 +62,7 @@ Um complemento do Thunderbird que traduz emails para vários idiomas usando Olla
 ## ⚙️ Configuração inicial
 
 ### 1. Abrir configurações do complemento
-   - Menu > Ferramentas > Complementos > "Ollama Translator" > Preferências
+   - Menu > Ferramentas > Complementos > "Thunderbird Translator" > Preferências
 
 ### 2. Escolher serviço e idioma
    - **Serviço**: Ollama (local) / Google Translate / LibreTranslate

@@ -41,7 +41,7 @@ Un complemento de Thunderbird que traduce correos electrónicos a múltiples idi
 
 ### Método 1: Archivo XPI (Recomendado)
 
-1. **Descarga** el archivo `thunderbird-ollama-translator.xpi`
+1. **Descarga** el archivo `thunderbird-translator.xpi`
 2. **Abre Thunderbird**
 3. Ve a **Menú > Herramientas > Complementos**
 4. Haz clic en el icono de engranaje ⚙️ en la parte superior derecha
@@ -62,7 +62,7 @@ Un complemento de Thunderbird que traduce correos electrónicos a múltiples idi
 ## ⚙️ Configuración inicial
 
 ### 1. Abrir configuración del complemento
-   - Menú > Herramientas > Complementos > "Ollama Translator" > Preferencias
+   - Menú > Herramientas > Complementos > "Thunderbird Translator" > Preferencias
 
 ### 2. Elegir servicio e idioma
    - **Servicio**: Ollama (local) / Google Translate / LibreTranslate

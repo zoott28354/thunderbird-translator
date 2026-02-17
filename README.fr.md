@@ -41,7 +41,7 @@ Une extension Thunderbird qui traduit les emails dans plusieurs langues en utili
 
 ### Méthode 1 : Fichier XPI (Recommandée)
 
-1. **Téléchargez** le fichier `thunderbird-ollama-translator.xpi`
+1. **Téléchargez** le fichier `thunderbird-translator.xpi`
 2. **Ouvrez Thunderbird**
 3. Allez dans **Menu > Outils > Modules complémentaires**
 4. Cliquez sur l'icône d'engrenage ⚙️ en haut à droite
@@ -62,7 +62,7 @@ Une extension Thunderbird qui traduit les emails dans plusieurs langues en utili
 ## ⚙️ Configuration initiale
 
 ### 1. Ouvrir les paramètres de l'extension
-   - Menu > Outils > Modules complémentaires > "Ollama Translator" > Préférences
+   - Menu > Outils > Modules complémentaires > "Thunderbird Translator" > Préférences
 
 ### 2. Choisir le service et la langue
    - **Service** : Ollama (local) / Google Translate / LibreTranslate
