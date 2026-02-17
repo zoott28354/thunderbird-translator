@@ -355,6 +355,12 @@
     port.postMessage({ command: "translationComplete" });
   }
 
+  // Helper function to detect URLs
+  function isURL(text) {
+    // Match http:// or https:// followed by non-whitespace
+    return /^https?:\/\/[^\s]+$/.test(text.trim());
+  }
+
   // Strategy 1: Translate each node separately (for plain text emails)
   async function translateNodeByNode(block) {
     console.log(`[Translator] Translating ${block.nodes.length} nodes individually`);
@@ -365,6 +371,15 @@
       const originalText = existingData && existingData.original
         ? existingData.original
         : node.textContent.trim();
+
+      // Skip links (by parent tag or URL pattern)
+      const isLinkElement = node.parentElement?.tagName === 'A';
+      const isURLText = isURL(originalText);
+
+      if (isLinkElement || isURLText) {
+        console.log(`[Translator] Skipping node ${i} (link/URL, parent: ${node.parentElement?.tagName || 'null'})`);
+        continue;
+      }
 
       if (originalText.length < MIN_TEXT_LENGTH) {
         console.log(`[Translator] Skipping node ${i} (too short: ${originalText.length} chars)`);
