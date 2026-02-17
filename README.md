@@ -1,4 +1,4 @@
-# Thunderbird Ollama Translator
+# Thunderbird Translator
 
 🇬🇧 [English](README.en.md) | 🇮🇹 [Italiano](README.md) | 🇫🇷 [Français](README.fr.md) | 🇪🇸 [Español](README.es.md) | 🇩🇪 [Deutsch](README.de.md) | 🇵🇹 [Português](README.pt.md) | 🇷🇺 [Русский](README.ru.md)
 
