@@ -273,11 +273,41 @@
 
     console.log(`[Translator] Starting translation of ${blocks.length} blocks`);
     console.log(`[Translator] Using ${nodeMap.size} previously translated nodes`);
+
+    // === DIAGNOSTIC LOGGING START ===
+    console.log(`[Translator] ===== BLOCKS ANALYSIS =====`);
+    console.log(`[Translator] - Total blocks: ${blocks.length}`);
+    for (let i = 0; i < blocks.length; i++) {
+      const block = blocks[i];
+      console.log(`[Translator] - Block ${i}: ${block.nodes.length} nodes, ${block.text.length} chars`);
+      console.log(`[Translator]   - First 100 chars: "${block.text.substring(0, 100)}..."`);
+
+      // Log info about first 3 nodes in each block
+      for (let j = 0; j < Math.min(block.nodes.length, 3); j++) {
+        const node = block.nodes[j];
+        const parent = node.parentElement;
+        console.log(`[Translator]   - Node ${j} parent: ${parent?.tagName || 'null'}`);
+        console.log(`[Translator]   - Node ${j} text: "${node.textContent.trim().substring(0, 50)}..."`);
+      }
+      if (block.nodes.length > 3) {
+        console.log(`[Translator]   - ... and ${block.nodes.length - 3} more nodes`);
+      }
+    }
+    // === DIAGNOSTIC LOGGING END ===
+
     showToast(messages.translating);
 
     try {
       // Detect email type: plain text emails have 1 block with multiple nodes
       const isPlainTextEmail = blocks.length === 1 && blocks[0].nodes.length > 1;
+
+      // === DIAGNOSTIC LOGGING START ===
+      console.log(`[Translator] ===== EMAIL TYPE DETECTION =====`);
+      console.log(`[Translator] - blocks.length: ${blocks.length}`);
+      console.log(`[Translator] - blocks[0].nodes.length: ${blocks.length > 0 ? blocks[0].nodes.length : 'N/A'}`);
+      console.log(`[Translator] - isPlainTextEmail: ${isPlainTextEmail}`);
+      console.log(`[Translator] - Strategy: ${isPlainTextEmail ? 'NODE-BY-NODE' : 'BLOCK TRANSLATION'}`);
+      // === DIAGNOSTIC LOGGING END ===
 
       if (isPlainTextEmail) {
         console.log(`[Translator] Detected plain text email with ${blocks[0].nodes.length} nodes - using node-by-node translation`);
