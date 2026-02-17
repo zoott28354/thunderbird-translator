@@ -1,173 +1,173 @@
 # Thunderbird Translator
 
-🇬🇧 [English](README.en.md) | 🇮🇹 [Italiano](README.md) | 🇫🇷 [Français](README.fr.md) | 🇪🇸 [Español](README.es.md) | 🇩🇪 [Deutsch](README.de.md) | 🇵🇹 [Português](README.pt.md) | 🇷🇺 [Русский](README.ru.md)
+🇬🇧 [English](README.md) | 🇮🇹 [Italiano](README.it.md) | 🇫🇷 [Français](README.fr.md) | 🇪🇸 [Español](README.es.md) | 🇩🇪 [Deutsch](README.de.md) | 🇵🇹 [Português](README.pt.md) | 🇷🇺 [Русский](README.ru.md)
 
 ---
 
-Un addon per Thunderbird che traduce le email in più lingue usando Ollama, Google Translate o LibreTranslate.
+A Thunderbird addon that translates emails into multiple languages using Ollama, Google Translate, or LibreTranslate.
 
-## ✨ Caratteristiche
+## ✨ Features
 
-- 🏠 **Traduzione locale** - Con Ollama: non invia dati online, tutto rimane sul tuo PC
-- 🤖 **Supporta tutti i modelli Ollama** - Llama, Mistral, Neural Chat, ecc.
-- 🌐 **Supporta diversi servizi di traduzione** - Ollama, Google Translate, LibreTranslate
-- 🌍 **Traduzione in più lingue** - Supporta 10 lingue: Italiano, English, Español, Français, Deutsch, Português, Русский, 日本語, 中文, 한국어
-- 🖱️ **Interfaccia semplice** - Fai clic destro sulla email e scegli il servizio e la lingua
-- 💾 **Impostazioni persistenti** - Le tue configurazioni si salvano automaticamente
-- 🌐 **Interfaccia multilingue** - L'addon è disponibile in 7 lingue: 🇮🇹 Italiano, 🇬🇧 English, 🇩🇪 Deutsch, 🇫🇷 Français, 🇪🇸 Español, 🇵🇹 Português, 🇷🇺 Русский (si adatta automaticamente alla lingua di Thunderbird)
+- 🏠 **Local translation** - With Ollama: no data sent online, everything stays on your PC
+- 🤖 **Supports all Ollama models** - Llama, Mistral, Neural Chat, etc.
+- 🌐 **Multiple translation services** - Ollama, Google Translate, LibreTranslate
+- 🌍 **Multi-language translation** - Supports 10 languages: Italian, English, Spanish, French, German, Portuguese, Russian, Japanese, Chinese, Korean
+- 🖱️ **Simple interface** - Right-click on email and choose service and language
+- 💾 **Persistent settings** - Your configurations are saved automatically
+- 🌐 **Multilingual interface** - The addon is available in 7 languages: 🇮🇹 Italian, 🇬🇧 English, 🇩🇪 German, 🇫🇷 French, 🇪🇸 Spanish, 🇵🇹 Portuguese, 🇷🇺 Russian (automatically adapts to Thunderbird's language)
 
-## 📋 Requisiti
+## 📋 Requirements
 
-### Per usare Ollama (locale, più privato)
+### For Ollama (local, more private)
 
-1. **Ollama** installato sul tuo PC
-   - Scarica da: https://ollama.ai
+1. **Ollama** installed on your PC
+   - Download from: https://ollama.ai
 
-2. **Un modello Ollama** scaricato
-   - Raccomandato: `ollama pull translategemma` (3GB, ottimizzato)
-   - Alternative: `llama3.2`, `mistral`
+2. **An Ollama model** downloaded
+   - Recommended: `ollama pull translategemma` (3GB, optimized)
+   - Alternatives: `llama3.2`, `mistral`
 
-3. **Thunderbird** versione 128 o superiore
+3. **Thunderbird** version 128 or higher
 
-⚠️ **Nota importante**: Prima di usare Ollama, dovrai configurare `OLLAMA_ORIGINS` (vedi sezione "Configurazione Iniziale" sotto).
+⚠️ **Important note**: Before using Ollama, you'll need to configure `OLLAMA_ORIGINS` (see "Initial Configuration" section below).
 
-### Per usare Google Translate o LibreTranslate (online, gratuiti)
+### For Google Translate or LibreTranslate (online, free)
 
-- **Nessun requisito** - Funzionano immediatamente
-- **Connessione internet** richiesta
+- **No requirements** - They work immediately
+- **Internet connection** required
 
-## 📦 Installazione
+## 📦 Installation
 
-### Metodo 1: File XPI (Raccomandato)
+### Method 1: XPI File (Recommended)
 
-1. **Scarica** il file `thunderbird-ollama-translator.xpi`
-2. **Apri Thunderbird**
-3. Vai a **Menu > Tools > Add-ons**
-4. Clicca l'engranaggio ⚙️ in alto a destra
-5. Seleziona **"Install Add-on from file..."**
-6. Seleziona il file `.xpi`
-7. Confema l'installazione
+1. **Download** the `thunderbird-ollama-translator.xpi` file
+2. **Open Thunderbird**
+3. Go to **Menu > Tools > Add-ons**
+4. Click the gear icon ⚙️ in the top right
+5. Select **"Install Add-on from file..."**
+6. Select the `.xpi` file
+7. Confirm installation
 
-### Metodo 2: Da Cartella (Sviluppo)
+### Method 2: From Folder (Development)
 
-1. Estrai i file in una cartella
-2. Apri Thunderbird
-3. Premi **Ctrl+Shift+A** (oppure da Menu > Tools > Add-ons)
-4. Clicca l'engranaggio ⚙️
-5. Seleziona **"Debug Add-ons"**
-6. Clicca **"Load Temporary Add-on..."**
-7. Seleziona il file `manifest.json` dalla cartella
+1. Extract files to a folder
+2. Open Thunderbird
+3. Press **Ctrl+Shift+A** (or from Menu > Tools > Add-ons)
+4. Click the gear icon ⚙️
+5. Select **"Debug Add-ons"**
+6. Click **"Load Temporary Add-on..."**
+7. Select the `manifest.json` file from the folder
 
-## ⚙️ Configurazione Iniziale
+## ⚙️ Initial Configuration
 
-### 1. Apri le impostazioni dell'addon
+### 1. Open addon settings
    - Menu > Tools > Add-ons > "Ollama Translator" > Preferences
 
-### 2. Scegli servizio e lingua
-   - **Servizio**: Ollama (locale) / Google Translate / LibreTranslate
-   - **Lingua**: Italiano, English, Español, Français, Deutsch, Português, Русский, 日本語, 中文, 한국어
+### 2. Choose service and language
+   - **Service**: Ollama (local) / Google Translate / LibreTranslate
+   - **Language**: Italian, English, Spanish, French, German, Portuguese, Russian, Japanese, Chinese, Korean
 
-### 3. Se usi Ollama: Configurazione OBBLIGATORIA
+### 3. If using Ollama: REQUIRED Configuration
 
-#### ⚠️ Configura OLLAMA_ORIGINS
+#### ⚠️ Configure OLLAMA_ORIGINS
 
-**Perché serve?**
-Per motivi di sicurezza, Ollama blocca le richieste da estensioni browser. Devi autorizzare esplicitamente Thunderbird.
+**Why is it needed?**
+For security reasons, Ollama blocks requests from browser extensions. You must explicitly authorize Thunderbird.
 
-**Valore raccomandato (più sicuro):**
+**Recommended value (more secure):**
 ```
 OLLAMA_ORIGINS=moz-extension://*
 ```
-Permette solo a estensioni Firefox/Thunderbird di accedere a Ollama. Blocca tutti i siti web esterni.
+Allows only Firefox/Thunderbird extensions to access Ollama. Blocks all external websites.
 
-**Come configurarlo:**
+**How to configure:**
 
 **Windows (CMD):**
 ```cmd
 setx OLLAMA_ORIGINS "moz-extension://*"
 ```
-Poi chiudi e riapri il terminale e avvia Ollama:
+Then close and reopen the terminal and start Ollama:
 ```cmd
 ollama serve
 ```
 
-**Linux/Mac (permanente):**
+**Linux/Mac (permanent):**
 ```bash
 echo 'export OLLAMA_ORIGINS="moz-extension://*"' >> ~/.bashrc
 source ~/.bashrc
 ollama serve
 ```
 
-**Opzione alternativa** (se hai bisogno anche di app locali):
+**Alternative option** (if you also need local apps):
 ```
 OLLAMA_ORIGINS=moz-extension://*,http://localhost:11434
 ```
 
-#### 4. Configura URL e modello
-   - **URL Ollama**: `http://localhost:11434` (default)
-   - **Test connessione**: Clicca per verificare che Ollama sia raggiungibile
-   - **Modello**: Seleziona `translategemma` (raccomandato) o altro modello installato
+#### 4. Configure URL and model
+   - **Ollama URL**: `http://localhost:11434` (default)
+   - **Test connection**: Click to verify that Ollama is reachable
+   - **Model**: Select `translategemma` (recommended) or another installed model
 
-#### 5. Salva
-   - Clicca "Salva"
+#### 5. Save
+   - Click "Save"
 
-## 🎯 Come Usare
+## 🎯 How to Use
 
-### Menu Contestuale (Raccomandato)
-1. **Apri una email** che vuoi tradurre
-2. **Fai clic destro** sul corpo del testo
-3. **Scegli il servizio** di traduzione:
-   - **"Traduci con Ollama"** → Traduzione locale e privata (richiede Ollama installato)
-   - **"Traduci con Google Translate"** → Traduzione online gratuita
-   - **"Traduci con LibreTranslate"** → Traduzione online open-source
-4. **Seleziona la lingua** di destinazione dal sottomenu
-   - La lingua selezionata apparirà in **grassetto**
-   - Questa scelta diventa il default per quel servizio
-5. Attendi il messaggio "Traduzione completata"
+### Context Menu (Recommended)
+1. **Open an email** you want to translate
+2. **Right-click** on the email body
+3. **Choose the translation service**:
+   - **"Translate with Ollama"** → Local and private translation (requires Ollama installed)
+   - **"Translate with Google Translate"** → Free online translation
+   - **"Translate with LibreTranslate"** → Open-source online translation
+4. **Select the target language** from the submenu
+   - The selected language will appear in **bold**
+   - This choice becomes the default for that service
+5. Wait for the message "Translation completed"
 
-**Esempio**: Se selezioni "Traduci con Google Translate > Español", tutte le successive traduzioni con Google Translate saranno in spagnolo (finché non scegli un'altra lingua).
+**Example**: If you select "Translate with Google Translate > Español", all subsequent translations with Google Translate will be in Spanish (until you choose another language).
 
-### Mostra Originale
-- Dopo la traduzione, fai **clic destro** sul testo
-- Seleziona **"Mostra originale"** per ripristinare il testo originale
+### Show Original
+- After translation, **right-click** on the text
+- Select **"Show Original"** to restore the original text
 
-## 🔒 Sicurezza
+## 🔒 Security
 
-### ✅ Cosa è Sicuro
-- **Nessun dato inviato online** - Tutto viene elaborato localmente da Ollama
-- **Connection locale** - Comunica solo con `localhost:11434`
-- **Nessuna traccia** - Non ci sono statistiche, tracking o log remoti
-- **Nessuna credenziale** - Non salva password o informazioni sensibili
-- **Permessi minimi** - Accede solo al testo della email per tradurre
+### ✅ What is Secure
+- **No data sent online** - Everything is processed locally by Ollama
+- **Local connection** - Communicates only with `localhost:11434`
+- **No tracking** - No statistics, tracking, or remote logs
+- **No credentials** - Doesn't save passwords or sensitive information
+- **Minimal permissions** - Only accesses email text for translation
 
-### 🛡️ Permessi Richiesti
-- `messagesRead` - Legge il contenuto della email (per tradurre)
-- `messagesModify` - Modifica il testo visualizzato (per mostrare la traduzione)
-- `menus` - Aggiunge il menu contestuale
-- `storage` - Salva le impostazioni
-- `tabs` - Inietta lo script nella email
-- **Host permissions** (solo se usi Google Translate o LibreTranslate):
-  - `https://translate.google.com/*` - API Google Translate
-  - `https://translate.fedilab.app/*` - Istanza LibreTranslate
-  - `http://localhost/*` - Per Ollama locale
+### 🛡️ Required Permissions
+- `messagesRead` - Reads email content (for translation)
+- `messagesModify` - Modifies displayed text (to show translation)
+- `menus` - Adds context menu
+- `storage` - Saves settings
+- `tabs` - Injects script into email
+- **Host permissions** (only if using Google Translate or LibreTranslate):
+  - `https://translate.google.com/*` - Google Translate API
+  - `https://translate.fedilab.app/*` - LibreTranslate instance
+  - `http://localhost/*` - For local Ollama
 
-Nessun accesso a:
-- ❌ Rubrica, calendario, chat
+No access to:
+- ❌ Address book, calendar, chat
 - ❌ Account credentials
-- ❌ Database Thunderbird
-- ❌ File system (eccetto localhost per Ollama)
+- ❌ Thunderbird database
+- ❌ File system (except localhost for Ollama)
 
 ## 🚨 Troubleshooting
 
-### "Errore: Ollama error: 403 Forbidden" ⚠️
+### "Error: Ollama error: 403 Forbidden" ⚠️
 
-**CAUSA**: Ollama blocca le richieste dalle estensioni browser per motivi di sicurezza.
+**CAUSE**: Ollama blocks requests from browser extensions for security reasons.
 
-**SOLUZIONE COMPLETA**:
+**COMPLETE SOLUTION**:
 
-1. **Ferma Ollama** se è in esecuzione (Ctrl+C nel terminale dove gira `ollama serve`)
+1. **Stop Ollama** if it's running (Ctrl+C in the terminal where `ollama serve` is running)
 
-2. **Configura la variabile d'ambiente** (valore raccomandato per sicurezza):
+2. **Configure the environment variable** (recommended value for security):
 
    **Windows (CMD):**
    ```cmd
@@ -180,31 +180,31 @@ Nessun accesso a:
    source ~/.bashrc
    ```
 
-3. **Chiudi e riapri il terminale**, poi avvia Ollama:
+3. **Close and reopen the terminal**, then start Ollama:
    ```bash
    ollama serve
    ```
 
-4. **Verifica la configurazione**:
-   - Apri Thunderbird
-   - Vai nelle impostazioni dell'addon
-   - Clicca "Test connessione"
-   - Dovrebbe mostrare "Connessione riuscita: X modelli disponibili"
+4. **Verify the configuration**:
+   - Open Thunderbird
+   - Go to addon settings
+   - Click "Test connection"
+   - Should show "Connection successful: X models available"
 
-**Nota**: `moz-extension://*` permette solo a estensioni Firefox/Thunderbird di accedere a Ollama, bloccando siti web esterni (più sicuro).
+**Note**: `moz-extension://*` allows only Firefox/Thunderbird extensions to access Ollama, blocking external websites (more secure).
 
-## 📝 Licenza
+## 📝 License
 
-MIT License - Libero di usare, modificare e distribuire.
+MIT License - Free to use, modify and distribute.
 
-## 🤝 Supporto
+## 🤝 Support
 
-Se hai problemi:
-1. **Apri la console** (Ctrl+Shift+I in una scheda Thunderbird)
-2. **Fai clic destro** sulla email > Seleziona servizio e lingua di traduzione
-3. **Guarda i messaggi blu** `[Translator]` nella console
-4. **Copia i messaggi di errore** e condividili
+If you have problems:
+1. **Open the console** (Ctrl+Shift+I in a Thunderbird tab)
+2. **Right-click** on the email > Select service and translation language
+3. **Look for blue messages** `[Translator]` in the console
+4. **Copy error messages** and share them
 
 ---
 
-**Buona traduzione!** 🎉
+**Happy translating!** 🎉
