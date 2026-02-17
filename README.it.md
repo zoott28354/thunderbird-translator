@@ -41,7 +41,7 @@ Un addon per Thunderbird che traduce le email in più lingue usando Ollama, Goog
 
 ### Metodo 1: File XPI (Raccomandato)
 
-1. **Scarica** il file `thunderbird-ollama-translator.xpi`
+1. **Scarica** il file `thunderbird-translator.xpi`
 2. **Apri Thunderbird**
 3. Vai a **Menu > Tools > Add-ons**
 4. Clicca l'engranaggio ⚙️ in alto a destra
@@ -62,7 +62,7 @@ Un addon per Thunderbird che traduce le email in più lingue usando Ollama, Goog
 ## ⚙️ Configurazione Iniziale
 
 ### 1. Apri le impostazioni dell'addon
-   - Menu > Tools > Add-ons > "Ollama Translator" > Preferences
+   - Menu > Tools > Add-ons > "Thunderbird Translator" > Preferences
 
 ### 2. Scegli servizio e lingua
    - **Servizio**: Ollama (locale) / Google Translate / LibreTranslate

@@ -41,7 +41,7 @@ Eine Thunderbird-Erweiterung, die E-Mails in mehrere Sprachen übersetzt mit Oll
 
 ### Methode 1: XPI-Datei (Empfohlen)
 
-1. **Laden Sie** die Datei `thunderbird-ollama-translator.xpi` herunter
+1. **Laden Sie** die Datei `thunderbird-translator.xpi` herunter
 2. **Öffnen Sie Thunderbird**
 3. Gehen Sie zu **Menü > Extras > Add-ons**
 4. Klicken Sie oben rechts auf das Zahnradsymbol ⚙️
@@ -62,7 +62,7 @@ Eine Thunderbird-Erweiterung, die E-Mails in mehrere Sprachen übersetzt mit Oll
 ## ⚙️ Erstkonfiguration
 
 ### 1. Öffnen Sie die Erweiterungseinstellungen
-   - Menü > Extras > Add-ons > "Ollama Translator" > Einstellungen
+   - Menü > Extras > Add-ons > "Thunderbird Translator" > Einstellungen
 
 ### 2. Wählen Sie Dienst und Sprache
    - **Dienst**: Ollama (lokal) / Google Translate / LibreTranslate
