@@ -425,35 +425,48 @@
     console.log(`[Translator] Translation applied to ${blocks.length} blocks`);
   }
 
-  // --- Reload Original Email ---
+  // --- Restore Original Email ---
 
   function reloadPage() {
-    console.log("[Translator] Cleaning up state before reload...");
+    console.log("[Translator] Restoring original email from nodeMap...");
 
-    // 1. Clear the nodeMap (stale DOM references)
-    nodeMap.clear();
+    let restored = 0;
+    let detached = 0;
 
-    // 2. Remove toast element if exists
-    if (toastEl && toastEl.parentNode) {
-      toastEl.remove();
-      toastEl = null;
+    // Restore each text node to its original content
+    for (const [node, data] of nodeMap.entries()) {
+      try {
+        // Verify node is still in the DOM
+        if (document.body.contains(node)) {
+          node.textContent = data.original;
+          restored++;
+        } else {
+          detached++;
+        }
+      } catch (e) {
+        console.error("[Translator] Error restoring node:", e);
+        detached++;
+      }
     }
 
-    // 3. Clear toast timeout if running
+    console.log(`[Translator] Restored ${restored} nodes, ${detached} detached`);
+
+    // Clear the nodeMap after restoration
+    nodeMap.clear();
+
+    // Hide any active toast
+    if (toastEl) {
+      toastEl.classList.remove("ollama-toast-visible");
+      toastEl.classList.add("ollama-toast-hidden");
+    }
+
+    // Clear timeout
     if (toastTimeout) {
       clearTimeout(toastTimeout);
       toastTimeout = null;
     }
 
-    // 4. Clear pending translation requests
-    pendingRequests.clear();
-
-    // 5. Reset the script loaded flag so content script can reinitialize
-    window.__ollamaTranslatorLoaded = false;
-
-    console.log("[Translator] State cleared, reloading page...");
-
-    // 6. Now reload - this will start completely fresh
-    location.reload();
+    // Show confirmation toast
+    showToast(messages.success || "Original email restored", true);
   }
 })();
