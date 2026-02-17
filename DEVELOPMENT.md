@@ -166,6 +166,43 @@ btn.style.cssText = `...`  // ← Modificare CSS qui
 | Ollama 403 Forbidden | ✅ RISOLTO (docs) | 20bec9a |
 | Menu contestuale hardcoded in italiano | ✅ RISOLTO | 29d5498 |
 | Interfaccia solo in 3 lingue | ✅ RISOLTO | 29d5498 |
+| **Email plain text non tradotte** | ✅ RISOLTO | 9086524 / eb41d79 |
+| **Link tradotti da Ollama (output errato)** | ✅ RISOLTO | 3402f89 / 6ec704f |
+| **Menu "Mostra originale" con caratteri strani** | ✅ RISOLTO | 64b2e34 / ba62dd9 |
+| **"Mostra originale" mostra header raw email** | ✅ RISOLTO | 9cd60fa / 010d5a0 |
+
+### Dettagli Fix Recenti (Febbraio 2026)
+
+#### Plain Text Email Detection (9086524 / eb41d79)
+- **Problema**: Email `Content-Type: text/plain` (es. GitHub notifications) non venivano tradotte correttamente. Il testo veniva duplicato o mancante.
+- **Root Cause**: Condizione di rilevamento `blocks.length === 1` falliva perché Thunderbird include header email come blocchi separati. Le email plain text hanno 9 blocchi (header + contenuto), non 1.
+- **Soluzione**: Rilevare blocchi tramite `parent.tagName === 'PRE'` invece di contare blocchi totali. Strategia ibrida:
+  - Blocchi con parent PRE → `translateNodeByNode()` (preserva paragrafi)
+  - Blocchi HTML → `translateByBlocks()` (performance)
+
+#### Link Translation Skip (3402f89 / 6ec704f)
+- **Problema**: URL come `https://github.com/settings/tokens` venivano inviati a Ollama, che restituiva le istruzioni del prompt invece della traduzione.
+- **Root Cause**: Nodi con parent `<A>` non erano filtrati. Ollama si confondeva ricevendo URL come testo da tradurre.
+- **Soluzione**: Skippa nodi con `parent.tagName === 'A'` o che matchano regex `/^https?:\/\/[^\s]+$/` in `translateNodeByNode()`.
+
+#### Menu i18n API (64b2e34 / ba62dd9)
+- **Problema**: Menu "Mostra originale" mostrava caratteri strani invece del testo localizzato.
+- **Root Cause**: Usava `browser.i18n.getMessage()` invece di `messenger.i18n.getMessage()`. Thunderbird usa `messenger.*` APIs.
+- **Soluzione**: Replace globale `browser.i18n` → `messenger.i18n` per consistenza.
+
+#### Show Original Text Restoration (9cd60fa / 010d5a0)
+- **Problema**: Click su "Mostra originale" mostrava header MIME raw (`X-Mozilla-Status: 0001`, `Delivered-To`, etc.) invece dell'email formattata.
+- **Root Cause**: `location.reload()` in Thunderbird message display ricarica il sorgente raw `.eml` invece di re-renderizzare HTML/plain text.
+- **Soluzione**: Invece di reload, ripristinare direttamente dal `nodeMap`:
+  ```javascript
+  for (const [node, data] of nodeMap.entries()) {
+    if (document.body.contains(node)) {
+      node.textContent = data.original;
+    }
+  }
+  nodeMap.clear();
+  ```
+  Vantaggi: Istantaneo, preserva scroll, nessun header raw, preserva layout.
 
 ## 🐛 Problemi Noti (da risolvere)
 
