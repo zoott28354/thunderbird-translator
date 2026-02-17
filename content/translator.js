@@ -274,26 +274,6 @@
     console.log(`[Translator] Starting translation of ${blocks.length} blocks`);
     console.log(`[Translator] Using ${nodeMap.size} previously translated nodes`);
 
-    // === DIAGNOSTIC LOGGING START ===
-    console.log(`[Translator] ===== BLOCKS ANALYSIS =====`);
-    console.log(`[Translator] - Total blocks: ${blocks.length}`);
-    for (let i = 0; i < blocks.length; i++) {
-      const block = blocks[i];
-      console.log(`[Translator] - Block ${i}: ${block.nodes.length} nodes, ${block.text.length} chars`);
-      console.log(`[Translator]   - First 100 chars: "${block.text.substring(0, 100)}..."`);
-
-      // Log info about first 3 nodes in each block
-      for (let j = 0; j < Math.min(block.nodes.length, 3); j++) {
-        const node = block.nodes[j];
-        const parent = node.parentElement;
-        console.log(`[Translator]   - Node ${j} parent: ${parent?.tagName || 'null'}`);
-        console.log(`[Translator]   - Node ${j} text: "${node.textContent.trim().substring(0, 50)}..."`);
-      }
-      if (block.nodes.length > 3) {
-        console.log(`[Translator]   - ... and ${block.nodes.length - 3} more nodes`);
-      }
-    }
-    // === DIAGNOSTIC LOGGING END ===
 
     showToast(messages.translating);
 
@@ -306,18 +286,6 @@
 
       const hasPlainTextContent = preBlocks.length > 0;
 
-      // === DIAGNOSTIC LOGGING START ===
-      console.log(`[Translator] ===== EMAIL TYPE DETECTION =====`);
-      console.log(`[Translator] - Total blocks: ${blocks.length}`);
-      console.log(`[Translator] - Blocks with PRE parent: ${preBlocks.length}`);
-      console.log(`[Translator] - Has plain text content: ${hasPlainTextContent}`);
-      if (hasPlainTextContent) {
-        preBlocks.forEach((block, i) => {
-          console.log(`[Translator] - PRE block ${i}: ${block.nodes.length} nodes, ${block.text.length} chars`);
-        });
-      }
-      console.log(`[Translator] - Strategy: ${hasPlainTextContent ? 'HYBRID (node-by-node for PRE blocks)' : 'BLOCK TRANSLATION'}`);
-      // === DIAGNOSTIC LOGGING END ===
 
       if (hasPlainTextContent) {
         console.log(`[Translator] Detected ${preBlocks.length} plain text blocks - using hybrid strategy`);
