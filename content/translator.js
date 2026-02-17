@@ -428,7 +428,32 @@
   // --- Reload Original Email ---
 
   function reloadPage() {
-    // Reload the page to show original email
+    console.log("[Translator] Cleaning up state before reload...");
+
+    // 1. Clear the nodeMap (stale DOM references)
+    nodeMap.clear();
+
+    // 2. Remove toast element if exists
+    if (toastEl && toastEl.parentNode) {
+      toastEl.remove();
+      toastEl = null;
+    }
+
+    // 3. Clear toast timeout if running
+    if (toastTimeout) {
+      clearTimeout(toastTimeout);
+      toastTimeout = null;
+    }
+
+    // 4. Clear pending translation requests
+    pendingRequests.clear();
+
+    // 5. Reset the script loaded flag so content script can reinitialize
+    window.__ollamaTranslatorLoaded = false;
+
+    console.log("[Translator] State cleared, reloading page...");
+
+    // 6. Now reload - this will start completely fresh
     location.reload();
   }
 })();
