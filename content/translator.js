@@ -84,9 +84,9 @@
         console.log(`[Translator Content Script] Target language set to: ${targetLanguage}`);
       }
       startTranslation();
-    } else if (message.command === "toggleOriginal") {
-      console.log("[Translator Content Script] Toggling original/translation");
-      toggleText(message.showOriginal);
+    } else if (message.command === "reloadOriginal") {
+      console.log("[Translator Content Script] Reloading original email");
+      reloadPage();
     }
   });
 
@@ -425,11 +425,10 @@
     console.log(`[Translator] Translation applied to ${blocks.length} blocks`);
   }
 
-  // --- Toggle Original / Translation ---
+  // --- Reload Original Email ---
 
-  function toggleText(showOriginal) {
-    for (const [node, texts] of nodeMap) {
-      node.textContent = showOriginal ? texts.original : texts.translated;
-    }
+  function reloadPage() {
+    // Reload the page to show original email
+    location.reload();
   }
 })();
