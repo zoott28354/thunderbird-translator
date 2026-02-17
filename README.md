@@ -6,15 +6,15 @@
 
 Un addon per Thunderbird che traduce le email in più lingue usando Ollama, Google Translate o LibreTranslate.
 
-## 🚀 Caratteristiche
+## ✨ Caratteristiche
 
-- **Traduzione locale** - Con Ollama: non invia dati online, tutto rimane sul tuo PC
-- **Supporta tutti i modelli Ollama** - Llama, Mistral, Neural Chat, ecc.
-- **Supporta diversi servizi di traduzione** - Ollama, Google Translate, LibreTranslate
-- **Traduzione in più lingue** - Supporta 10 lingue: Italiano, English, Español, Français, Deutsch, Português, Русский, 日本語, 中文, 한국어
-- **Interfaccia semplice** - Fai clic destro sulla email e scegli il servizio e la lingua
-- **Impostazioni persistenti** - Le tue configurazioni si salvano automaticamente
-- **Interfaccia multilingue** - L'addon è disponibile in 7 lingue: 🇮🇹 Italiano, 🇬🇧 English, 🇩🇪 Deutsch, 🇫🇷 Français, 🇪🇸 Español, 🇵🇹 Português, 🇷🇺 Русский (si adatta automaticamente alla lingua di Thunderbird)
+- 🏠 **Traduzione locale** - Con Ollama: non invia dati online, tutto rimane sul tuo PC
+- 🤖 **Supporta tutti i modelli Ollama** - Llama, Mistral, Neural Chat, ecc.
+- 🌐 **Supporta diversi servizi di traduzione** - Ollama, Google Translate, LibreTranslate
+- 🌍 **Traduzione in più lingue** - Supporta 10 lingue: Italiano, English, Español, Français, Deutsch, Português, Русский, 日本語, 中文, 한국어
+- 🖱️ **Interfaccia semplice** - Fai clic destro sulla email e scegli il servizio e la lingua
+- 💾 **Impostazioni persistenti** - Le tue configurazioni si salvano automaticamente
+- 🌐 **Interfaccia multilingue** - L'addon è disponibile in 7 lingue: 🇮🇹 Italiano, 🇬🇧 English, 🇩🇪 Deutsch, 🇫🇷 Français, 🇪🇸 Español, 🇵🇹 Português, 🇷🇺 Русский (si adatta automaticamente alla lingua di Thunderbird)
 
 ## 📋 Requisiti
 
