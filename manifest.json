@@ -3,7 +3,7 @@
   "name": "Thunderbird Translator",
   "version": "2.0.0",
   "description": "Traduci le email usando Ollama, Google Translate, LibreTranslate o altri servizi",
-  "author": "giulio",
+  "author": "Thunderbird Ollama Translator Contributors",
   "default_locale": "en",
   "browser_specific_settings": {
     "gecko": {

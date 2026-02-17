@@ -297,9 +297,8 @@ Se il progetto cresce:
 - **Storage per servizio**: Ogni servizio ha la propria lingua target salvata (ollamaTargetLang, googleTargetLang, libreTargetLang)
 - **Menu HTML bold**: Usa tag `<b>` nei titoli menu per evidenziare lingua selezionata (supportato da Thunderbird menus API)
 
-## 👤 Contatti & Credits
+## 👤 Credits
 
-- **Author**: giulio
 - **License**: MIT
 - **Created**: Febbraio 2026
 - **Status**: Stable (v2.0.0)
