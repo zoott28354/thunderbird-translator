@@ -122,5 +122,9 @@
   "contextMenuTitle": {
     "message": "Translate with Ollama",
     "description": "Context menu parent title"
+  },
+  "translationComplete": {
+    "message": "Translation complete!",
+    "description": "Message shown when translation is done"
   }
 }

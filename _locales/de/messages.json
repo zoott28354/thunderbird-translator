@@ -122,5 +122,9 @@
   "contextMenuTitle": {
     "message": "Mit Ollama übersetzen",
     "description": "Kontextmenütitel"
+  },
+  "translationComplete": {
+    "message": "Übersetzung abgeschlossen!",
+    "description": "Meldung wenn die Übersetzung abgeschlossen ist"
   }
 }

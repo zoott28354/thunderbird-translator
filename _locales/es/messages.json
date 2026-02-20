@@ -122,5 +122,9 @@
   "contextMenuTitle": {
     "message": "Traducir con Ollama",
     "description": "Título del menú contextual"
+  },
+  "translationComplete": {
+    "message": "¡Traducción completa!",
+    "description": "Mensaje mostrado cuando se completa la traducción"
   }
 }

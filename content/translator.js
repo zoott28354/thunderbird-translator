@@ -54,7 +54,6 @@
     if (message.command === "messages") {
       messages = message.data;
       console.log("[Translator Content Script] Messages loaded");
-      createTranslateButton();
       return;
     }
 
