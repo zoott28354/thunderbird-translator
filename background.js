@@ -474,24 +474,32 @@ messenger.menus.onClicked.addListener(async (info, tab) => {
 
     console.log(`[Translator] Saved ${storageKey} = ${targetLang}, service = ${service}`);
 
-    // Use the tab passed directly by the menu click event
-    if (!tab || !tab.id) {
-      console.error("[Translator] No tab found in menu click event");
+    // If content script is already connected, send command directly without re-injecting
+    if (activePort) {
+      console.log("[Translator] Port already active, sending startTranslation directly");
+      activePort.postMessage({
+        command: "startTranslation",
+        targetLanguage: targetLang
+      });
       return;
     }
 
-    const activeTab = tab;
-    console.log("[Translator] Injecting content script into tab:", activeTab.id);
+    // Port not available: try to inject the content script into the tab
+    if (!tab || !tab.id) {
+      console.error("[Translator] No tab and no active port, cannot translate");
+      return;
+    }
+
+    console.log("[Translator] No active port, injecting content script into tab:", tab.id);
 
     try {
-      // Inject the content script
-      await messenger.tabs.executeScript(activeTab.id, {
+      await messenger.tabs.executeScript(tab.id, {
         file: "content/translator.js",
         runAt: "document_start"
       });
       console.log("[Translator] Content script injected successfully");
 
-      // Wait a bit for the script to connect
+      // Wait a bit for the script to connect then send command
       setTimeout(() => {
         if (activePort) {
           console.log("[Translator] Sending startTranslation command with target:", targetLang);
