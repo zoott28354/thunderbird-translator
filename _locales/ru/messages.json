@@ -123,6 +123,14 @@
     "message": "Перевести с Ollama",
     "description": "Заголовок контекстного меню"
   },
+  "googleTranslateMenuTitle": {
+    "message": "Перевести с Google Translate",
+    "description": "Заголовок контекстного меню для Google Translate"
+  },
+  "libreTranslateMenuTitle": {
+    "message": "Перевести с LibreTranslate",
+    "description": "Заголовок контекстного меню для LibreTranslate"
+  },
   "translationComplete": {
     "message": "Перевод завершён!",
     "description": "Сообщение при завершении перевода"

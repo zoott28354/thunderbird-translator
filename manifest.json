@@ -5,12 +5,14 @@
   "description": "Translate emails using Ollama, Google Translate or LibreTranslate",
   "author": "zoott28354",
   "default_locale": "en",
+
   "browser_specific_settings": {
     "gecko": {
       "id": "translator@thunderbird-addon",
       "strict_min_version": "128.0"
     }
   },
+
   "permissions": [
     "messagesRead",
     "messagesModify",
@@ -24,15 +26,23 @@
     "https://libretranslate.com/*",
     "https://translate.argosopentech.com/*"
   ],
+
   "background": {
     "scripts": ["background.js"]
   },
-  "message_display_scripts": [
-    "content/translator.js"
+
+  "content_scripts": [
+    {
+      "matches": ["*://*/*"],
+      "js": ["content/translator.js"],
+      "run_at": "document_idle"
+    }
   ],
+
   "options_ui": {
     "page": "options/options.html"
   },
+
   "icons": {
     "48": "icons/translate-48.png",
     "96": "icons/translate-96.png"

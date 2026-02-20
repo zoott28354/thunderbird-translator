@@ -123,6 +123,14 @@
     "message": "Translate with Ollama",
     "description": "Context menu parent title"
   },
+  "googleTranslateMenuTitle": {
+    "message": "Translate with Google Translate",
+    "description": "Context menu parent title for Google Translate"
+  },
+  "libreTranslateMenuTitle": {
+    "message": "Translate with LibreTranslate",
+    "description": "Context menu parent title for LibreTranslate"
+  },
   "translationComplete": {
     "message": "Translation complete!",
     "description": "Message shown when translation is done"

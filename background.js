@@ -96,7 +96,7 @@ function createContextMenu() {
       // Create Google Translate menu with language submenus
       await messenger.menus.create({
         id: "translate-google-parent",
-        title: "Traduci con Google Translate",
+        title: messenger.i18n.getMessage("googleTranslateMenuTitle") || "Translate with Google Translate",
         contexts: ["all"],
       });
 
@@ -116,7 +116,7 @@ function createContextMenu() {
       // Create LibreTranslate menu with language submenus
       await messenger.menus.create({
         id: "translate-libre-parent",
-        title: "Traduci con LibreTranslate",
+        title: messenger.i18n.getMessage("libreTranslateMenuTitle") || "Translate with LibreTranslate",
         contexts: ["all"],
       });
 

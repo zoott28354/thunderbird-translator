@@ -123,6 +123,14 @@
     "message": "Mit Ollama übersetzen",
     "description": "Kontextmenütitel"
   },
+  "googleTranslateMenuTitle": {
+    "message": "Mit Google Translate übersetzen",
+    "description": "Kontextmenütitel für Google Translate"
+  },
+  "libreTranslateMenuTitle": {
+    "message": "Mit LibreTranslate übersetzen",
+    "description": "Kontextmenütitel für LibreTranslate"
+  },
   "translationComplete": {
     "message": "Übersetzung abgeschlossen!",
     "description": "Meldung wenn die Übersetzung abgeschlossen ist"
