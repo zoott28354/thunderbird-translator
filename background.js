@@ -159,56 +159,9 @@ messenger.storage.onChanged.addListener((changes, area) => {
   }
 });
 
-// --- Helper: inject content script into a message display tab ---
-
-async function injectContentScript(tabId) {
-  // Try scripting.messageDisplay API (TB 128+ non-ESR)
-  if (messenger.scripting && messenger.scripting.messageDisplay) {
-    try {
-      await messenger.scripting.messageDisplay.executeScript(tabId, {
-        js: [{ file: "content/translator.js" }],
-      });
-      console.log("[Translator] Content script injected via scripting.messageDisplay API, tab:", tabId);
-      return;
-    } catch (e) {
-      console.warn("[Translator] scripting.messageDisplay failed, trying tabs API:", e.message);
-    }
-  }
-  // Fallback: tabs.executeScript (TB ESR)
-  await messenger.tabs.executeScript(tabId, {
-    file: "content/translator.js",
-    runAt: "document_start"
-  });
-  console.log("[Translator] Content script injected via tabs API, tab:", tabId);
-}
-
-// --- Find the message display tab ---
-
-async function getMessageDisplayTabId() {
-  // Strategy 1: look for a dedicated messageDisplay tab (email opened in separate window)
-  try {
-    const msgTabs = await messenger.tabs.query({ type: "messageDisplay" });
-    if (msgTabs.length > 0) {
-      console.log("[Translator] Found messageDisplay tab:", msgTabs[0].id);
-      return msgTabs[0].id;
-    }
-  } catch (e) {
-    console.warn("[Translator] tabs.query messageDisplay failed:", e.message);
-  }
-
-  // Strategy 2: active mail tab in 3-pane view
-  try {
-    const mailTabs = await messenger.mailTabs.query({ active: true, currentWindow: true });
-    if (mailTabs.length > 0) {
-      console.log("[Translator] Found active mail tab:", mailTabs[0].id);
-      return mailTabs[0].id;
-    }
-  } catch (e) {
-    console.warn("[Translator] mailTabs.query failed:", e.message);
-  }
-
-  return null;
-}
+// --- No manual injection needed ---
+// content/translator.js is declared in manifest as message_display_scripts
+// and is automatically loaded by Thunderbird whenever a message is displayed.
 
 // --- Port-based communication with content scripts ---
 
@@ -523,42 +476,16 @@ messenger.menus.onClicked.addListener(async (info, tab) => {
 
     console.log(`[Translator] Saved ${storageKey} = ${targetLang}, service = ${service}`);
 
-    // If content script is already connected, send command directly
+    // Content script is auto-loaded via message_display_scripts in manifest.
+    // If port is active, send command directly.
     if (activePort) {
-      console.log("[Translator] Port already active, sending startTranslation directly");
+      console.log("[Translator] Port active, sending startTranslation with target:", targetLang);
       activePort.postMessage({
         command: "startTranslation",
         targetLanguage: targetLang
       });
-      return;
-    }
-
-    // Port not available: find the message display tab dynamically
-    const targetTabId = await getMessageDisplayTabId();
-    if (!targetTabId) {
-      console.error("[Translator] No message display tab found, open an email first");
-      return;
-    }
-
-    console.log("[Translator] No active port, injecting content script into message display tab:", targetTabId);
-
-    try {
-      await injectContentScript(targetTabId);
-
-      // Wait a bit for the script to connect then send command
-      setTimeout(() => {
-        if (activePort) {
-          console.log("[Translator] Sending startTranslation command with target:", targetLang);
-          activePort.postMessage({
-            command: "startTranslation",
-            targetLanguage: targetLang
-          });
-        } else {
-          console.error("[Translator] Still no active port after injection");
-        }
-      }, 100);
-    } catch (e) {
-      console.error("[Translator] Error injecting content script:", e);
+    } else {
+      console.error("[Translator] No active port - open an email first, then try again");
     }
   } else if (info.menuItemId === "toggle-original") {
     if (activePort) {

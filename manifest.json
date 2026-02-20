@@ -27,6 +27,9 @@
   "background": {
     "scripts": ["background.js"]
   },
+  "message_display_scripts": [
+    "content/translator.js"
+  ],
   "options_ui": {
     "page": "options/options.html"
   },
