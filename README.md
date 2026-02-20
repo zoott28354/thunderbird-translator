@@ -1,6 +1,10 @@
 # Thunderbird Translator
 **(Local Ollama · Google Translate · LibreTranslate)**
 
+<p align="center">
+  <img src="preview.png" alt="Thunderbird Translator Preview" width="600">
+</p>
+
 ---
 
 A Thunderbird addon that translates emails into multiple languages using Ollama, Google Translate, or LibreTranslate.
