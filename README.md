@@ -12,7 +12,7 @@ A Thunderbird addon that replaces the email body with its translation (in-place)
 ## ✨ Features
 
 - 🏠 **Local translation** - With Ollama: no data sent online, everything stays on your PC
-- 🤖 **Supports all Ollama models** - Llama, Mistral, Neural Chat, etc.
+- 🤖 **Supports all Ollama models** - Translategemma, Llama, Mistral, Neural Chat, etc.
 - 🌐 **Multiple translation services** - Ollama, Google Translate, LibreTranslate
 - 🌍 **Multi-language translation** - Supports 10 languages: Italian, English, Spanish, French, German, Portuguese, Russian, Japanese, Chinese, Korean
 - 🖱️ **Simple interface** - Right-click on email and choose service and language
