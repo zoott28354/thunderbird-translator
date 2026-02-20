@@ -161,6 +161,24 @@ messenger.storage.onChanged.addListener((changes, area) => {
   }
 });
 
+// --- Auto-inject content script when an email is displayed ---
+
+let messageDisplayTabId = null;
+
+messenger.messageDisplay.onMessageDisplayed.addListener(async (tab, message) => {
+  console.log("[Translator] Email displayed in tab:", tab.id);
+  messageDisplayTabId = tab.id;
+  try {
+    await messenger.tabs.executeScript(tab.id, {
+      file: "content/translator.js",
+      runAt: "document_start"
+    });
+    console.log("[Translator] Content script injected on message display, tab:", tab.id);
+  } catch (e) {
+    console.warn("[Translator] Could not inject on message display:", e.message);
+  }
+});
+
 // --- Port-based communication with content scripts ---
 
 // Most recent port from a message display content script.
@@ -474,7 +492,7 @@ messenger.menus.onClicked.addListener(async (info, tab) => {
 
     console.log(`[Translator] Saved ${storageKey} = ${targetLang}, service = ${service}`);
 
-    // If content script is already connected, send command directly without re-injecting
+    // If content script is already connected, send command directly
     if (activePort) {
       console.log("[Translator] Port already active, sending startTranslation directly");
       activePort.postMessage({
@@ -484,16 +502,17 @@ messenger.menus.onClicked.addListener(async (info, tab) => {
       return;
     }
 
-    // Port not available: try to inject the content script into the tab
-    if (!tab || !tab.id) {
-      console.error("[Translator] No tab and no active port, cannot translate");
+    // Port not available: inject into the known message display tab
+    const targetTabId = messageDisplayTabId;
+    if (!targetTabId) {
+      console.error("[Translator] No message display tab known, open an email first");
       return;
     }
 
-    console.log("[Translator] No active port, injecting content script into tab:", tab.id);
+    console.log("[Translator] No active port, injecting content script into message display tab:", targetTabId);
 
     try {
-      await messenger.tabs.executeScript(tab.id, {
+      await messenger.tabs.executeScript(targetTabId, {
         file: "content/translator.js",
         runAt: "document_start"
       });
