@@ -467,14 +467,13 @@ messenger.menus.onClicked.addListener(async (info, tab) => {
 
     console.log(`[Translator] Saved ${storageKey} = ${targetLang}, service = ${service}`);
 
-    // Get the active message tab
-    const tabs = await messenger.tabs.query({ active: true, lastFocusedWindow: true });
-    if (!tabs.length) {
-      console.error("[Translator] No active tab found");
+    // Use the tab passed directly by the menu click event
+    if (!tab || !tab.id) {
+      console.error("[Translator] No tab found in menu click event");
       return;
     }
 
-    const activeTab = tabs[0];
+    const activeTab = tab;
     console.log("[Translator] Injecting content script into tab:", activeTab.id);
 
     try {
