@@ -28,7 +28,7 @@ Um complemento do Thunderbird que traduz emails para vários idiomas usando Olla
    - Recomendado: `ollama pull translategemma` (3GB, otimizado)
    - Alternativas: `llama3.2`, `mistral`
 
-3. **Thunderbird** versão 128 ou superior
+3. **Thunderbird** 140x (esr)
 
 ⚠️ **Nota importante**: Antes de usar o Ollama, você precisará configurar `OLLAMA_ORIGINS` (veja a seção "Configuração inicial" abaixo).
 
