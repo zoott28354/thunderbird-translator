@@ -55,8 +55,12 @@ async function getSettings() {
 // --- Context Menu ---
 
 let menuCreated = false;
+let menuCreating = false;
 
 async function createContextMenu() {
+  // Prevent concurrent calls from creating duplicate menu items
+  if (menuCreating) return;
+  menuCreating = true;
   try {
     const settings = await getSettings();
     const { ollamaTargetLang, googleTargetLang, libreTargetLang } = settings;
@@ -64,6 +68,7 @@ async function createContextMenu() {
     // Remove all existing menus first (only if already created)
     if (menuCreated) {
       await messenger.menus.removeAll();
+      menuCreated = false;
     }
 
     const languages = Object.keys(LANGUAGE_NAMES);
@@ -132,6 +137,8 @@ async function createContextMenu() {
     console.log(`[Translator] Menu created with 3 services, each with ${languages.length} language options`);
   } catch (e) {
     console.warn("[Translator] Error in createContextMenu:", e.message);
+  } finally {
+    menuCreating = false;
   }
 }
 
