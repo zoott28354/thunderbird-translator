@@ -28,7 +28,7 @@ Eine Thunderbird-Erweiterung, die E-Mails in mehrere Sprachen übersetzt mit Oll
    - Empfohlen: `ollama pull translategemma` (3GB, optimiert)
    - Alternativen: `llama3.2`, `mistral`
 
-3. **Thunderbird** Version 128 oder höher
+3. **Thunderbird** 140x (esr)
 
 ⚠️ **Wichtiger Hinweis**: Bevor Sie Ollama verwenden, müssen Sie `OLLAMA_ORIGINS` konfigurieren (siehe Abschnitt "Erstkonfiguration" unten).
 
