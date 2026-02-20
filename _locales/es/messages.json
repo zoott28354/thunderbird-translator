@@ -123,6 +123,14 @@
     "message": "Traducir con Ollama",
     "description": "Título del menú contextual"
   },
+  "googleTranslateMenuTitle": {
+    "message": "Traducir con Google Translate",
+    "description": "Título del menú contextual para Google Translate"
+  },
+  "libreTranslateMenuTitle": {
+    "message": "Traducir con LibreTranslate",
+    "description": "Título del menú contextual para LibreTranslate"
+  },
   "translationComplete": {
     "message": "¡Traducción completa!",
     "description": "Mensaje mostrado cuando se completa la traducción"
