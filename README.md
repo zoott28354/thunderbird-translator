@@ -7,7 +7,7 @@
 
 ---
 
-A Thunderbird addon that translates emails into multiple languages using Ollama, Google Translate, or LibreTranslate.
+A Thunderbird addon that replaces the email body with its translation (in-place) into multiple languages using Ollama local, Google Translate, or LibreTranslate (Euro-friendly).
 
 ## ✨ Features
 
