@@ -182,19 +182,23 @@ async function injectContentScript(tabId) {
   console.log("[Translator] Content script injected via tabs API, tab:", tabId);
 }
 
-// --- Auto-inject content script when an email is displayed ---
+// --- Find the message display tab ---
 
-let messageDisplayTabId = null;
-
-messenger.messageDisplay.onMessageDisplayed.addListener(async (tab, message) => {
-  console.log("[Translator] Email displayed in tab:", tab.id);
-  messageDisplayTabId = tab.id;
+async function getMessageDisplayTabId() {
+  // Try mailTabs API to find a tab displaying a message
   try {
-    await injectContentScript(tab.id);
+    const mailTabs = await messenger.mailTabs.getAll();
+    for (const mailTab of mailTabs) {
+      if (mailTab.displayedMessageId || mailTab.id) {
+        console.log("[Translator] Found mail tab:", mailTab.id);
+        return mailTab.id;
+      }
+    }
   } catch (e) {
-    console.warn("[Translator] Could not inject on message display:", e.message);
+    console.warn("[Translator] mailTabs.getAll failed:", e.message);
   }
-});
+  return null;
+}
 
 // --- Port-based communication with content scripts ---
 
@@ -519,10 +523,10 @@ messenger.menus.onClicked.addListener(async (info, tab) => {
       return;
     }
 
-    // Port not available: inject into the known message display tab
-    const targetTabId = messageDisplayTabId;
+    // Port not available: find the message display tab dynamically
+    const targetTabId = await getMessageDisplayTabId();
     if (!targetTabId) {
-      console.error("[Translator] No message display tab known, open an email first");
+      console.error("[Translator] No message display tab found, open an email first");
       return;
     }
 
