@@ -28,7 +28,7 @@ Un addon per Thunderbird che traduce le email in più lingue usando Ollama, Goog
    - Raccomandato: `ollama pull translategemma` (3GB, ottimizzato)
    - Alternative: `llama3.2`, `mistral`
 
-3. **Thunderbird** versione 128 o superiore
+3. **Thunderbird** 140x (esr)
 
 ⚠️ **Nota importante**: Prima di usare Ollama, dovrai configurare `OLLAMA_ORIGINS` (vedi sezione "Configurazione Iniziale" sotto).
 
