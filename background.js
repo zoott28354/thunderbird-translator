@@ -54,92 +54,90 @@ async function getSettings() {
 
 // --- Context Menu ---
 
-let menuCreated = false;
-let menuCreating = false;
+// Serialize menu creation: queue at most one pending rebuild
+let menuCreateChain = Promise.resolve();
+let menuPendingCount = 0;
 
-async function createContextMenu() {
-  // Prevent concurrent calls from creating duplicate menu items
-  if (menuCreating) return;
-  menuCreating = true;
-  try {
-    const settings = await getSettings();
-    const { ollamaTargetLang, googleTargetLang, libreTargetLang } = settings;
+function createContextMenu() {
+  // If there's already one pending call queued, don't add another
+  if (menuPendingCount >= 1) return;
+  menuPendingCount++;
+  menuCreateChain = menuCreateChain.then(async () => {
+    menuPendingCount--;
+    try {
+      const settings = await getSettings();
+      const { ollamaTargetLang, googleTargetLang, libreTargetLang } = settings;
 
-    // Remove all existing menus first (only if already created)
-    if (menuCreated) {
+      // Always remove all menus first to avoid ID conflicts
       await messenger.menus.removeAll();
-      menuCreated = false;
-    }
 
-    const languages = Object.keys(LANGUAGE_NAMES);
+      const languages = Object.keys(LANGUAGE_NAMES);
 
-    // Create Ollama menu with language submenus
-    await messenger.menus.create({
-      id: "translate-ollama-parent",
-      title: messenger.i18n.getMessage("contextMenuTitle"),
-      contexts: ["all"],
-    });
-
-    for (const langCode of languages) {
-      const langName = LANGUAGE_NAMES[langCode];
-      const isSelected = langCode === ollamaTargetLang;
-      const title = isSelected ? toBold(langName) : langName;
-
+      // Create Ollama menu with language submenus
       await messenger.menus.create({
-        id: `ollama-${langCode}`,
-        parentId: "translate-ollama-parent",
-        title: title,
+        id: "translate-ollama-parent",
+        title: messenger.i18n.getMessage("contextMenuTitle"),
         contexts: ["all"],
       });
-    }
 
-    // Create Google Translate menu with language submenus
-    await messenger.menus.create({
-      id: "translate-google-parent",
-      title: "Traduci con Google Translate",
-      contexts: ["all"],
-    });
+      for (const langCode of languages) {
+        const langName = LANGUAGE_NAMES[langCode];
+        const isSelected = langCode === ollamaTargetLang;
+        const title = isSelected ? toBold(langName) : langName;
 
-    for (const langCode of languages) {
-      const langName = LANGUAGE_NAMES[langCode];
-      const isSelected = langCode === googleTargetLang;
-      const title = isSelected ? toBold(langName) : langName;
+        await messenger.menus.create({
+          id: `ollama-${langCode}`,
+          parentId: "translate-ollama-parent",
+          title: title,
+          contexts: ["all"],
+        });
+      }
 
+      // Create Google Translate menu with language submenus
       await messenger.menus.create({
-        id: `google-${langCode}`,
-        parentId: "translate-google-parent",
-        title: title,
+        id: "translate-google-parent",
+        title: "Traduci con Google Translate",
         contexts: ["all"],
       });
-    }
 
-    // Create LibreTranslate menu with language submenus
-    await messenger.menus.create({
-      id: "translate-libre-parent",
-      title: "Traduci con LibreTranslate",
-      contexts: ["all"],
-    });
+      for (const langCode of languages) {
+        const langName = LANGUAGE_NAMES[langCode];
+        const isSelected = langCode === googleTargetLang;
+        const title = isSelected ? toBold(langName) : langName;
 
-    for (const langCode of languages) {
-      const langName = LANGUAGE_NAMES[langCode];
-      const isSelected = langCode === libreTargetLang;
-      const title = isSelected ? toBold(langName) : langName;
+        await messenger.menus.create({
+          id: `google-${langCode}`,
+          parentId: "translate-google-parent",
+          title: title,
+          contexts: ["all"],
+        });
+      }
 
+      // Create LibreTranslate menu with language submenus
       await messenger.menus.create({
-        id: `libre-${langCode}`,
-        parentId: "translate-libre-parent",
-        title: title,
+        id: "translate-libre-parent",
+        title: "Traduci con LibreTranslate",
         contexts: ["all"],
       });
-    }
 
-    menuCreated = true;
-    console.log(`[Translator] Menu created with 3 services, each with ${languages.length} language options`);
-  } catch (e) {
-    console.warn("[Translator] Error in createContextMenu:", e.message);
-  } finally {
-    menuCreating = false;
-  }
+      for (const langCode of languages) {
+        const langName = LANGUAGE_NAMES[langCode];
+        const isSelected = langCode === libreTargetLang;
+        const title = isSelected ? toBold(langName) : langName;
+
+        await messenger.menus.create({
+          id: `libre-${langCode}`,
+          parentId: "translate-libre-parent",
+          title: title,
+          contexts: ["all"],
+        });
+      }
+
+      console.log(`[Translator] Menu created with 3 services, each with ${languages.length} language options`);
+    } catch (e) {
+      console.warn("[Translator] Error in createContextMenu:", e.message);
+    }
+  });
 }
 
 // --- Initialize context menu on startup and install ---
@@ -161,6 +159,29 @@ messenger.storage.onChanged.addListener((changes, area) => {
   }
 });
 
+// --- Helper: inject content script (compatible with TB 140 ESR and TB 147+) ---
+
+async function injectContentScript(tabId) {
+  // Try scripting API first (TB 128+ non-ESR), fall back to tabs API (ESR)
+  if (messenger.scripting) {
+    try {
+      await messenger.scripting.executeScript({
+        target: { tabId: tabId },
+        files: ["content/translator.js"],
+      });
+      console.log("[Translator] Content script injected via scripting API, tab:", tabId);
+      return;
+    } catch (e) {
+      console.warn("[Translator] scripting API failed, trying tabs API:", e.message);
+    }
+  }
+  await messenger.tabs.executeScript(tabId, {
+    file: "content/translator.js",
+    runAt: "document_start"
+  });
+  console.log("[Translator] Content script injected via tabs API, tab:", tabId);
+}
+
 // --- Auto-inject content script when an email is displayed ---
 
 let messageDisplayTabId = null;
@@ -169,11 +190,7 @@ messenger.messageDisplay.onMessageDisplayed.addListener(async (tab, message) => 
   console.log("[Translator] Email displayed in tab:", tab.id);
   messageDisplayTabId = tab.id;
   try {
-    await messenger.tabs.executeScript(tab.id, {
-      file: "content/translator.js",
-      runAt: "document_start"
-    });
-    console.log("[Translator] Content script injected on message display, tab:", tab.id);
+    await injectContentScript(tab.id);
   } catch (e) {
     console.warn("[Translator] Could not inject on message display:", e.message);
   }
@@ -512,11 +529,7 @@ messenger.menus.onClicked.addListener(async (info, tab) => {
     console.log("[Translator] No active port, injecting content script into message display tab:", targetTabId);
 
     try {
-      await messenger.tabs.executeScript(targetTabId, {
-        file: "content/translator.js",
-        runAt: "document_start"
-      });
-      console.log("[Translator] Content script injected successfully");
+      await injectContentScript(targetTabId);
 
       // Wait a bit for the script to connect then send command
       setTimeout(() => {
