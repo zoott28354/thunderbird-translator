@@ -17,6 +17,7 @@
     "menus",
     "storage",
     "tabs",
+    "messageDisplay",
     "http://localhost/*",
     "https://translate.google.com/*",
     "https://translate.fedilab.app/*",
