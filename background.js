@@ -159,22 +159,22 @@ messenger.storage.onChanged.addListener((changes, area) => {
   }
 });
 
-// --- Helper: inject content script (compatible with TB 140 ESR and TB 147+) ---
+// --- Helper: inject content script into a message display tab ---
 
 async function injectContentScript(tabId) {
-  // Try scripting API first (TB 128+ non-ESR), fall back to tabs API (ESR)
-  if (messenger.scripting) {
+  // Try scripting.messageDisplay API (TB 128+ non-ESR)
+  if (messenger.scripting && messenger.scripting.messageDisplay) {
     try {
-      await messenger.scripting.executeScript({
-        target: { tabId: tabId },
-        files: ["content/translator.js"],
+      await messenger.scripting.messageDisplay.executeScript(tabId, {
+        js: [{ file: "content/translator.js" }],
       });
-      console.log("[Translator] Content script injected via scripting API, tab:", tabId);
+      console.log("[Translator] Content script injected via scripting.messageDisplay API, tab:", tabId);
       return;
     } catch (e) {
-      console.warn("[Translator] scripting API failed, trying tabs API:", e.message);
+      console.warn("[Translator] scripting.messageDisplay failed, trying tabs API:", e.message);
     }
   }
+  // Fallback: tabs.executeScript (TB ESR)
   await messenger.tabs.executeScript(tabId, {
     file: "content/translator.js",
     runAt: "document_start"
@@ -185,18 +185,28 @@ async function injectContentScript(tabId) {
 // --- Find the message display tab ---
 
 async function getMessageDisplayTabId() {
-  // Try mailTabs API to find a tab displaying a message
+  // Strategy 1: look for a dedicated messageDisplay tab (email opened in separate window)
   try {
-    const mailTabs = await messenger.mailTabs.getAll();
-    for (const mailTab of mailTabs) {
-      if (mailTab.displayedMessageId || mailTab.id) {
-        console.log("[Translator] Found mail tab:", mailTab.id);
-        return mailTab.id;
-      }
+    const msgTabs = await messenger.tabs.query({ type: "messageDisplay" });
+    if (msgTabs.length > 0) {
+      console.log("[Translator] Found messageDisplay tab:", msgTabs[0].id);
+      return msgTabs[0].id;
     }
   } catch (e) {
-    console.warn("[Translator] mailTabs.getAll failed:", e.message);
+    console.warn("[Translator] tabs.query messageDisplay failed:", e.message);
   }
+
+  // Strategy 2: active mail tab in 3-pane view
+  try {
+    const mailTabs = await messenger.mailTabs.query({ active: true, currentWindow: true });
+    if (mailTabs.length > 0) {
+      console.log("[Translator] Found active mail tab:", mailTabs[0].id);
+      return mailTabs[0].id;
+    }
+  } catch (e) {
+    console.warn("[Translator] mailTabs.query failed:", e.message);
+  }
+
   return null;
 }
 
