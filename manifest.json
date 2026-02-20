@@ -17,7 +17,6 @@
     "menus",
     "storage",
     "tabs",
-    "messageDisplay",
     "scripting",
     "http://localhost/*",
     "https://translate.google.com/*",
