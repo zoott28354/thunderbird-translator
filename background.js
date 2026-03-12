@@ -246,11 +246,22 @@ async function injectAndSend(targetLang, preferredTabId = null) {
 // lastActivePort is used as fallback when tab info is unavailable.
 const portMap = new Map();
 let lastActivePort = null;
-let lastClickedPort = null; // port that received the most recent contextmenu event
+let lastClickedPort = null;   // port that received the most recent contextmenu event
+let lastActivatedTabId = null; // tabId of the most recently focused tab
+
+messenger.tabs.onActivated.addListener(({ tabId }) => {
+  lastActivatedTabId = tabId;
+  console.log("[Translator] Tab activated:", tabId);
+});
 
 function getPortForTab(tabId) {
+  // 1. Exact match from menu click tab
   if (tabId != null && portMap.has(tabId)) return portMap.get(tabId);
+  // 2. Port that sent the contextmenu event
   if (lastClickedPort) return lastClickedPort;
+  // 3. Most recently activated tab
+  if (lastActivatedTabId != null && portMap.has(lastActivatedTabId)) return portMap.get(lastActivatedTabId);
+  // 4. Last connected port
   return lastActivePort;
 }
 
