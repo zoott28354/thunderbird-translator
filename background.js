@@ -263,10 +263,13 @@ messenger.mailTabs.onSelectedMessagesChanged.addListener((mailTab) => {
 });
 
 function getPortForTab(tabId) {
-  // 1. Exact match from menu click tab
-  if (tabId != null && portMap.has(tabId)) return portMap.get(tabId);
-  // 2. Port that sent the contextmenu event
+  // 1. Port that sent the most recent mouseenter/contextmenu signal.
+  //    This is the most reliable indicator of where the user actually is,
+  //    because Thunderbird sometimes passes the main mail-tab ID (not the
+  //    messageDisplay tab ID) in menus.onClicked, making the tabId lookup wrong.
   if (lastClickedPort) return lastClickedPort;
+  // 2. Exact match on the tab ID supplied by menus.onClicked
+  if (tabId != null && portMap.has(tabId)) return portMap.get(tabId);
   // 3. Most recently activated tab
   if (lastActivatedTabId != null && portMap.has(lastActivatedTabId)) return portMap.get(lastActivatedTabId);
   // 4. Last connected port
