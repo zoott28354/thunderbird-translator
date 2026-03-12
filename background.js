@@ -249,9 +249,17 @@ let lastActivePort = null;
 let lastClickedPort = null;   // port that received the most recent contextmenu event
 let lastActivatedTabId = null; // tabId of the most recently focused tab
 
+// Fired when user switches to a separate email tab
 messenger.tabs.onActivated.addListener(({ tabId }) => {
   lastActivatedTabId = tabId;
   console.log("[Translator] Tab activated:", tabId);
+});
+
+// Fired when user selects a message in the 3-pane preview
+messenger.mailTabs.onSelectedMessagesChanged.addListener((mailTab) => {
+  lastActivatedTabId = mailTab.id;
+  lastClickedPort = null; // reset so preview pane port takes priority
+  console.log("[Translator] Message selected in mail tab:", mailTab.id);
 });
 
 function getPortForTab(tabId) {
