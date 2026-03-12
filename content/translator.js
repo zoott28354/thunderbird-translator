@@ -40,6 +40,12 @@
   const port = browser.runtime.connect({ name: "translator" });
   console.log("[Translator Content Script] Connecting to background...");
 
+  // Notify background when user right-clicks in this frame,
+  // so it knows which port to use for the upcoming menu click.
+  document.addEventListener("contextmenu", () => {
+    port.postMessage({ command: "contextmenu" });
+  }, true);
+
   // Pending translation requests: id -> { resolve, reject }
   const pendingRequests = new Map();
   let nextRequestId = 0;
