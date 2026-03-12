@@ -77,7 +77,7 @@ function createContextMenu() {
       await messenger.menus.create({
         id: "translate-ollama-parent",
         title: messenger.i18n.getMessage("contextMenuTitle"),
-        contexts: ["all"],
+        contexts: ["page", "frame", "selection"],
       });
 
       for (const langCode of languages) {
@@ -89,7 +89,7 @@ function createContextMenu() {
           id: `ollama-${langCode}`,
           parentId: "translate-ollama-parent",
           title: title,
-          contexts: ["all"],
+          contexts: ["page", "frame", "selection"],
         });
       }
 
@@ -97,7 +97,7 @@ function createContextMenu() {
       await messenger.menus.create({
         id: "translate-google-parent",
         title: messenger.i18n.getMessage("googleTranslateMenuTitle") || "Translate with Google Translate",
-        contexts: ["all"],
+        contexts: ["page", "frame", "selection"],
       });
 
       for (const langCode of languages) {
@@ -109,7 +109,7 @@ function createContextMenu() {
           id: `google-${langCode}`,
           parentId: "translate-google-parent",
           title: title,
-          contexts: ["all"],
+          contexts: ["page", "frame", "selection"],
         });
       }
 
@@ -117,7 +117,7 @@ function createContextMenu() {
       await messenger.menus.create({
         id: "translate-libre-parent",
         title: messenger.i18n.getMessage("libreTranslateMenuTitle") || "Translate with LibreTranslate",
-        contexts: ["all"],
+        contexts: ["page", "frame", "selection"],
       });
 
       for (const langCode of languages) {
@@ -129,7 +129,7 @@ function createContextMenu() {
           id: `libre-${langCode}`,
           parentId: "translate-libre-parent",
           title: title,
-          contexts: ["all"],
+          contexts: ["page", "frame", "selection"],
         });
       }
 
@@ -163,19 +163,20 @@ messenger.storage.onChanged.addListener((changes, area) => {
 // message_display_scripts in manifest auto-loads on new messages,
 // but as a fallback we also inject manually when no port is available.
 
-async function injectAndSend(targetLang) {
-  // Try to find the message display tab
-  let tabId = null;
+async function injectAndSend(targetLang, preferredTabId = null) {
+  let tabId = preferredTabId;
 
   // Strategy 1: dedicated messageDisplay tab (email in separate window)
-  try {
-    const msgTabs = await messenger.tabs.query({ type: "messageDisplay" });
-    if (msgTabs.length > 0) {
-      tabId = msgTabs[0].id;
-      console.log("[Translator] Found messageDisplay tab:", tabId);
+  if (tabId === null) {
+    try {
+      const msgTabs = await messenger.tabs.query({ type: "messageDisplay" });
+      if (msgTabs.length > 0) {
+        tabId = msgTabs[0].id;
+        console.log("[Translator] Found messageDisplay tab:", tabId);
+      }
+    } catch (e) {
+      console.warn("[Translator] tabs.query messageDisplay failed:", e.message);
     }
-  } catch (e) {
-    console.warn("[Translator] tabs.query messageDisplay failed:", e.message);
   }
 
   // Strategy 2: active mail tab (3-pane view) via messageDisplay API
@@ -183,7 +184,6 @@ async function injectAndSend(targetLang) {
     try {
       const mailTabs = await messenger.mailTabs.query({ active: true, currentWindow: true });
       if (mailTabs.length > 0) {
-        // Verify a message is actually displayed
         const msg = await messenger.messageDisplay.getDisplayedMessage(mailTabs[0].id);
         if (msg) {
           tabId = mailTabs[0].id;
@@ -223,14 +223,16 @@ async function injectAndSend(targetLang) {
     }
   }
 
-  // Wait for the content script to connect and send the command
+  // Poll for port connection by tabId, then send the command
+  const resolvedTabId = tabId;
   let waited = 0;
   const interval = setInterval(() => {
     waited += 50;
-    if (activePort) {
+    const port = getPortForTab(resolvedTabId);
+    if (port) {
       clearInterval(interval);
       console.log("[Translator] Port connected after injection, sending startTranslation");
-      activePort.postMessage({ command: "startTranslation", targetLanguage: targetLang });
+      port.postMessage({ command: "startTranslation", targetLanguage: targetLang });
     } else if (waited >= 2000) {
       clearInterval(interval);
       console.error("[Translator] Port never connected after injection (timeout 2s)");
@@ -240,20 +242,30 @@ async function injectAndSend(targetLang) {
 
 // --- Port-based communication with content scripts ---
 
-// Most recent port from a message display content script.
-// Each new message display replaces the previous one.
-let activePort = null;
+// Map from tabId → port for all connected content scripts.
+// lastActivePort is used as fallback when tab info is unavailable.
+const portMap = new Map();
+let lastActivePort = null;
+
+function getPortForTab(tabId) {
+  if (tabId != null && portMap.has(tabId)) return portMap.get(tabId);
+  return lastActivePort;
+}
 
 messenger.runtime.onConnect.addListener((port) => {
   if (port.name !== "translator") return;
 
-  console.log("[Translator] Content script connected");
-  activePort = port;
+  const tabId = port.sender?.tab?.id ?? null;
+  console.log("[Translator] Content script connected, tabId:", tabId);
+
+  if (tabId != null) portMap.set(tabId, port);
+  lastActivePort = port;
 
   port.onDisconnect.addListener(() => {
-    console.log("[Translator] Content script disconnected");
-    if (activePort === port) {
-      activePort = null;
+    console.log("[Translator] Content script disconnected, tabId:", tabId);
+    if (tabId != null) portMap.delete(tabId);
+    if (lastActivePort === port) {
+      lastActivePort = portMap.size > 0 ? [...portMap.values()].at(-1) : null;
     }
   });
 
@@ -310,7 +322,7 @@ messenger.runtime.onConnect.addListener((port) => {
         await messenger.menus.create({
           id: "toggle-original",
           title: messenger.i18n.getMessage("showOriginal"),
-          contexts: ["all"],
+          contexts: ["page", "frame", "selection"],
         });
       } catch (_) {
         messenger.menus.update("toggle-original", {
@@ -536,7 +548,8 @@ messenger.menus.onClicked.addListener(async (info, tab) => {
   }
 
   if (service && targetLang) {
-    console.log(`[Translator] ${service} - Translate to '${targetLang}' (${LANGUAGE_NAMES[targetLang]}) menu clicked`);
+    const tabId = tab?.id ?? null;
+    console.log(`[Translator] ${service} - Translate to '${targetLang}' (${LANGUAGE_NAMES[targetLang]}) menu clicked, tabId:`, tabId);
 
     // Save the selected language permanently for this service
     const storageKey = service === "ollama" ? "ollamaTargetLang" :
@@ -551,23 +564,20 @@ messenger.menus.onClicked.addListener(async (info, tab) => {
 
     console.log(`[Translator] Saved ${storageKey} = ${targetLang}, service = ${service}`);
 
-    // Content script is auto-loaded via message_display_scripts in manifest.
-    // If port is active, send command directly; otherwise inject as fallback.
-    if (activePort) {
-      console.log("[Translator] Port active, sending startTranslation with target:", targetLang);
-      activePort.postMessage({
-        command: "startTranslation",
-        targetLanguage: targetLang
-      });
+    // Find the port for the tab where the menu was clicked
+    const port = getPortForTab(tabId);
+    if (port) {
+      console.log("[Translator] Port active for tab", tabId, ", sending startTranslation with target:", targetLang);
+      port.postMessage({ command: "startTranslation", targetLanguage: targetLang });
     } else {
-      console.log("[Translator] No active port, attempting injection as fallback");
-      await injectAndSend(targetLang);
+      console.log("[Translator] No active port for tab", tabId, ", attempting injection as fallback");
+      await injectAndSend(targetLang, tabId);
     }
   } else if (info.menuItemId === "toggle-original") {
-    if (activePort) {
-      activePort.postMessage({
-        command: "reloadOriginal",
-      });
+    const tabId = tab?.id ?? null;
+    const port = getPortForTab(tabId);
+    if (port) {
+      port.postMessage({ command: "reloadOriginal" });
     }
   }
 });
