@@ -249,10 +249,12 @@ let lastActivePort = null;
 let lastClickedPort = null;   // port that received the most recent contextmenu event
 let lastActivatedTabId = null; // tabId of the most recently focused tab
 
-// Fired when user switches to a separate email tab
+// Fired when user switches tabs. Reset lastClickedPort so stale signals
+// from the previous tab don't bleed into the new context.
 messenger.tabs.onActivated.addListener(({ tabId }) => {
   lastActivatedTabId = tabId;
-  console.log("[Translator] Tab activated:", tabId);
+  lastClickedPort = null;
+  console.log("[Translator] Tab activated:", tabId, "- lastClickedPort reset");
 });
 
 // Fired when user selects a message in the 3-pane preview
