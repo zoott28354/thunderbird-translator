@@ -242,35 +242,73 @@ async function injectAndSend(targetLang, preferredTabId = null) {
 
 // --- Port-based communication with content scripts ---
 
-// Map from tabId → port for all connected content scripts.
-// lastActivePort is used as fallback when tab info is unavailable.
+// portMap: tabId → port (latest port per tab, for fallback)
 const portMap = new Map();
+// framePortMap: "tabId-frameId" → port (precise per-frame routing)
+const framePortMap = new Map();
 let lastActivePort = null;
-let lastClickedPort = null;   // port that received the most recent contextmenu event
-let lastActivatedTabId = null; // tabId of the most recently focused tab
+let lastActivatedTabId = null;
 
-// Fired when user switches tabs. Reset lastClickedPort so stale signals
-// from the previous tab don't bleed into the new context.
-messenger.tabs.onActivated.addListener(({ tabId }) => {
-  lastActivatedTabId = tabId;
-  lastClickedPort = null;
-  console.log("[Translator] Tab activated:", tabId, "- lastClickedPort reset");
+// menus.onShown fires synchronously in the background the moment the context
+// menu appears. It gives us the exact (tabId, frameId) of the frame that was
+// right-clicked — no IPC latency, no iframe boundary issues.
+let lastShownMenuContext = null;
+
+messenger.menus.onShown.addListener((info, tab) => {
+  lastShownMenuContext = { tabId: tab?.id ?? null, frameId: info.frameId ?? 0 };
+  console.log("[Translator] Menu shown — tabId:", tab?.id, "frameId:", info.frameId);
 });
 
-// Fired when user selects a message in the 3-pane preview
+messenger.menus.onHidden.addListener(() => {
+  lastShownMenuContext = null;
+});
+
+// Track tab switches (used as fallback)
+messenger.tabs.onActivated.addListener(({ tabId }) => {
+  lastActivatedTabId = tabId;
+  console.log("[Translator] Tab activated:", tabId);
+});
+
 messenger.mailTabs.onSelectedMessagesChanged.addListener((mailTab) => {
   lastActivatedTabId = mailTab.id;
-  lastClickedPort = null; // reset so preview pane port takes priority
   console.log("[Translator] Message selected in mail tab:", mailTab.id);
 });
 
 function getPortForTab(tabId) {
-  // 1. Port that sent the most recent mouseenter/contextmenu signal.
-  //    This is the most reliable indicator of where the user actually is,
-  //    because Thunderbird sometimes passes the main mail-tab ID (not the
-  //    messageDisplay tab ID) in menus.onClicked, making the tabId lookup wrong.
-  if (lastClickedPort) return lastClickedPort;
-  // 2. Exact match on the tab ID supplied by menus.onClicked
+  // 1. Use the exact (tabId, frameId) captured by menus.onShown.
+  //    This runs in the background process with zero IPC latency, making it
+  //    the most reliable signal: it fires right when the menu appears, before
+  //    the user can click a menu item.
+  if (lastShownMenuContext) {
+    const { tabId: shownTabId, frameId } = lastShownMenuContext;
+
+    // Try the tabId+frameId combination reported by onShown
+    const key1 = `${shownTabId}-${frameId}`;
+    if (framePortMap.has(key1)) {
+      console.log("[Translator] getPortForTab: framePortMap hit key1:", key1);
+      return framePortMap.get(key1);
+    }
+
+    // Try with the tabId from onClicked (may differ from onShown in edge cases)
+    const key2 = `${tabId}-${frameId}`;
+    if (framePortMap.has(key2)) {
+      console.log("[Translator] getPortForTab: framePortMap hit key2:", key2);
+      return framePortMap.get(key2);
+    }
+
+    // For non-zero frameIds the frame is unique (an iframe), scan all entries
+    if (frameId !== 0) {
+      const suffix = `-${frameId}`;
+      for (const [k, p] of framePortMap.entries()) {
+        if (k.endsWith(suffix)) {
+          console.log("[Translator] getPortForTab: framePortMap suffix hit:", k);
+          return p;
+        }
+      }
+    }
+  }
+
+  // 2. Exact tabId match (portMap)
   if (tabId != null && portMap.has(tabId)) return portMap.get(tabId);
   // 3. Most recently activated tab
   if (lastActivatedTabId != null && portMap.has(lastActivatedTabId)) return portMap.get(lastActivatedTabId);
@@ -281,15 +319,19 @@ function getPortForTab(tabId) {
 messenger.runtime.onConnect.addListener((port) => {
   if (port.name !== "translator") return;
 
-  const tabId = port.sender?.tab?.id ?? null;
-  console.log("[Translator] Content script connected, tabId:", tabId);
+  const tabId  = port.sender?.tab?.id ?? null;
+  const frameId = port.sender?.frameId ?? 0;
+  const fKey   = `${tabId}-${frameId}`;
+  console.log("[Translator] Content script connected, tabId:", tabId, "frameId:", frameId);
 
   if (tabId != null) portMap.set(tabId, port);
+  framePortMap.set(fKey, port);
   lastActivePort = port;
 
   port.onDisconnect.addListener(() => {
-    console.log("[Translator] Content script disconnected, tabId:", tabId);
-    if (tabId != null) portMap.delete(tabId);
+    console.log("[Translator] Content script disconnected, tabId:", tabId, "frameId:", frameId);
+    if (tabId != null && portMap.get(tabId) === port) portMap.delete(tabId);
+    framePortMap.delete(fKey);
     if (lastActivePort === port) {
       lastActivePort = portMap.size > 0 ? [...portMap.values()].at(-1) : null;
     }
@@ -297,9 +339,10 @@ messenger.runtime.onConnect.addListener((port) => {
 
   // Handle messages from content script through the port
   port.onMessage.addListener(async (message) => {
+    // "active" sent by the contextmenu listener in content script — kept as
+    // an extra fallback in case menus.onShown is not available.
     if (message.command === "contextmenu" || message.command === "active") {
-      lastClickedPort = port;
-      return;
+      return; // no-op: menus.onShown supersedes this
     }
 
     if (message.command === "getMessages") {
@@ -563,6 +606,10 @@ let toggleMenuCreated = false;
 // --- Event Handlers ---
 
 messenger.menus.onClicked.addListener(async (info, tab) => {
+  // Consume and clear the menu context captured by onShown
+  const shownContext = lastShownMenuContext;
+  lastShownMenuContext = null;
+
   // Check if it's a service-specific language menu item
   let service = null;
   let targetLang = null;
