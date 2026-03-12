@@ -40,10 +40,17 @@
   const port = browser.runtime.connect({ name: "translator" });
   console.log("[Translator Content Script] Connecting to background...");
 
-  // Notify background when user right-clicks in this frame,
-  // so it knows which port to use for the upcoming menu click.
+  // Notify background which frame is active so it routes the upcoming
+  // menu click to the right port. mouseenter on body fires as soon as
+  // the cursor enters this email frame, before any contextmenu event,
+  // and works reliably across iframe boundaries.
+  document.body.addEventListener("mouseenter", () => {
+    port.postMessage({ command: "active" });
+  }, false);
+
+  // Also catch contextmenu as a secondary signal (belt-and-suspenders)
   document.addEventListener("contextmenu", () => {
-    port.postMessage({ command: "contextmenu" });
+    port.postMessage({ command: "active" });
   }, true);
 
   // Pending translation requests: id -> { resolve, reject }

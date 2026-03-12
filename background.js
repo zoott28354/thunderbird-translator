@@ -292,7 +292,7 @@ messenger.runtime.onConnect.addListener((port) => {
 
   // Handle messages from content script through the port
   port.onMessage.addListener(async (message) => {
-    if (message.command === "contextmenu") {
+    if (message.command === "contextmenu" || message.command === "active") {
       lastClickedPort = port;
       return;
     }
