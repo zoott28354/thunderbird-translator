@@ -1,5 +1,7 @@
 $src = 'C:\Users\giuli\Documents\GitHub\thunderbird-translator'
-$xpiPath = Join-Path $src 'thunderbird-translator.xpi'
+$manifest = Get-Content (Join-Path $src 'manifest.json') | ConvertFrom-Json
+$version = $manifest.version
+$xpiPath = Join-Path $src "thunderbird-translator-v$version.xpi"
 
 # Remove old XPI if exists
 if (Test-Path $xpiPath) {
@@ -41,6 +43,5 @@ Get-ChildItem -Path (Join-Path $src '_locales') -Recurse -File | ForEach-Object 
 }
 
 $zip.Dispose()
-Write-Host "XPI created successfully"
 $size = (Get-Item $xpiPath).Length
-Write-Host "Size: $size bytes"
+Write-Host "XPI created: thunderbird-translator-v$version.xpi ($size bytes)"
