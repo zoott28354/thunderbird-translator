@@ -218,21 +218,12 @@ LibreTranslate uses free public instances. The addon automatically tries 3 insta
 ## 📜 Changelog
 
 ### v1.5.0
-- **Fix**: Deterministic tab/preview routing — translating from a separate email tab no longer interferes with the preview pane (and vice versa). Uses `menus.onShown` + `framePortMap` for exact frame-level targeting.
-- **Fix**: Removed `message_display_scripts` manifest key (caused warnings on Thunderbird 147+). Content script is now registered programmatically via `messageDisplayScripts.register()`.
-
-### v1.4.0
-- **Fix**: Added programmatic `messageDisplayScripts` registration for broader Thunderbird version compatibility.
-
-### v1.3.0
-- **Fix**: Context menu now appears only in the email body (not in folder pane or message list).
-- Versioned XPI filenames.
-
-### v1.2.0
-- **Fix**: Port-based tab routing with `portMap` for multi-tab support.
+- Deterministic tab/preview routing — translating from a separate email tab no longer interferes with the preview pane (and vice versa)
+- Context menu now appears only in the email body (not in folder pane or message list)
+- Programmatic `messageDisplayScripts` registration for broad Thunderbird compatibility (128 ESR to 147+)
 
 ### v1.0.0
-- Initial release with Ollama, Google Translate, and LibreTranslate support.
+- Initial release with Ollama, Google Translate, and LibreTranslate support
 
 ## 📝 License
 
