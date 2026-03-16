@@ -94,10 +94,17 @@ Then close and reopen the terminal and start Ollama:
 ollama serve
 ```
 
-**Linux/Mac (permanent):**
+**Linux (permanent):**
 ```bash
 echo 'export OLLAMA_ORIGINS="moz-extension://*"' >> ~/.bashrc
 source ~/.bashrc
+ollama serve
+```
+
+**macOS (permanent):**
+```bash
+echo 'export OLLAMA_ORIGINS="moz-extension://*"' >> ~/.zshrc
+source ~/.zshrc
 ollama serve
 ```
 
@@ -162,6 +169,10 @@ No access to:
 
 ## 🚨 Troubleshooting
 
+### LibreTranslate: random errors or slow responses
+
+LibreTranslate uses free public instances. The addon automatically tries 3 instances in sequence — if one fails, it moves to the next. Random errors (timeouts, 429 rate-limit, 503 server down) are normal and expected with free public instances. Simply retry after a few seconds.
+
 ### "Error: Ollama error: 403 Forbidden" ⚠️
 
 **CAUSE**: Ollama blocks requests from browser extensions for security reasons.
@@ -195,6 +206,25 @@ No access to:
    - Should show "Connection successful: X models available"
 
 **Note**: `moz-extension://*` allows only Firefox/Thunderbird extensions to access Ollama, blocking external websites (more secure).
+
+## 📜 Changelog
+
+### v1.5.0
+- **Fix**: Deterministic tab/preview routing — translating from a separate email tab no longer interferes with the preview pane (and vice versa). Uses `menus.onShown` + `framePortMap` for exact frame-level targeting.
+- **Fix**: Removed `message_display_scripts` manifest key (caused warnings on Thunderbird 147+). Content script is now registered programmatically via `messageDisplayScripts.register()`.
+
+### v1.4.0
+- **Fix**: Added programmatic `messageDisplayScripts` registration for broader Thunderbird version compatibility.
+
+### v1.3.0
+- **Fix**: Context menu now appears only in the email body (not in folder pane or message list).
+- Versioned XPI filenames.
+
+### v1.2.0
+- **Fix**: Port-based tab routing with `portMap` for multi-tab support.
+
+### v1.0.0
+- Initial release with Ollama, Google Translate, and LibreTranslate support.
 
 ## 📝 License
 

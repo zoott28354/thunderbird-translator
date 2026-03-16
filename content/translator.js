@@ -40,15 +40,6 @@
   const port = browser.runtime.connect({ name: "translator" });
   console.log("[Translator Content Script] Connecting to background...");
 
-  // When the user right-clicks inside this email frame the contextmenu event
-  // fires here before Thunderbird shows the menu. We tell the background
-  // "this port is the active frame" so it routes the upcoming menu click
-  // to exactly this content script. Human reaction time (>200 ms) ensures
-  // the message arrives before menus.onClicked fires in the background.
-  document.addEventListener("contextmenu", () => {
-    port.postMessage({ command: "active" });
-  }, true);
-
   // Pending translation requests: id -> { resolve, reject }
   const pendingRequests = new Map();
   let nextRequestId = 0;

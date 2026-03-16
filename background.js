@@ -240,96 +240,86 @@ async function injectAndSend(targetLang, preferredTabId = null) {
   }, 50);
 }
 
+// --- Register message display script programmatically ---
+// The manifest key message_display_scripts is not recognised by all TB versions.
+// Using the API directly is more reliable and works across all versions.
+if (messenger.messageDisplayScripts) {
+  messenger.messageDisplayScripts.register({
+    js: [{ file: "content/translator.js" }],
+  }).then(() => {
+    console.log("[Translator] messageDisplayScripts registered");
+  }).catch(e => {
+    console.warn("[Translator] messageDisplayScripts.register failed:", e.message);
+  });
+}
+
 // --- Port-based communication with content scripts ---
+// content/translator.js is registered via messageDisplayScripts above, so it
+// auto-injects into every displayed email.  We keep TWO maps:
+//   portMap      : tabId            → port   (quick lookup by tab)
+//   framePortMap : "tabId-frameId"  → port   (exact frame-level lookup)
+// menus.onShown captures {tabId, frameId} synchronously in the background when
+// the context menu appears – this is the most reliable routing signal.
 
-// portMap: tabId → port (latest port per tab, for fallback)
-const portMap = new Map();
-// framePortMap: "tabId-frameId" → port (precise per-frame routing)
-const framePortMap = new Map();
+const portMap = new Map();      // tabId → port
+const framePortMap = new Map(); // "tabId-frameId" → port
 let lastActivePort = null;
-let lastActivatedTabId = null;
 
-// menus.onShown fires synchronously in the background the moment the context
-// menu appears. It gives us the exact (tabId, frameId) of the frame that was
-// right-clicked — no IPC latency, no iframe boundary issues.
+// Context captured by menus.onShown (runs synchronously in background)
 let lastShownMenuContext = null;
 
 messenger.menus.onShown.addListener((info, tab) => {
-  lastShownMenuContext = { tabId: tab?.id ?? null, frameId: info.frameId ?? 0 };
-  console.log("[Translator] Menu shown — tabId:", tab?.id, "frameId:", info.frameId);
+  lastShownMenuContext = {
+    tabId: tab?.id ?? null,
+    frameId: info.frameId ?? 0,
+  };
+  console.log("[Translator] Menu shown – tabId:", lastShownMenuContext.tabId,
+              "frameId:", lastShownMenuContext.frameId);
 });
 
 messenger.menus.onHidden.addListener(() => {
   lastShownMenuContext = null;
 });
 
-// Track tab switches (used as fallback)
-messenger.tabs.onActivated.addListener(({ tabId }) => {
-  lastActivatedTabId = tabId;
-  console.log("[Translator] Tab activated:", tabId);
-});
-
-messenger.mailTabs.onSelectedMessagesChanged.addListener((mailTab) => {
-  lastActivatedTabId = mailTab.id;
-  console.log("[Translator] Message selected in mail tab:", mailTab.id);
-});
-
 function getPortForTab(tabId) {
-  // 1. Use the exact (tabId, frameId) captured by menus.onShown.
-  //    This runs in the background process with zero IPC latency, making it
-  //    the most reliable signal: it fires right when the menu appears, before
-  //    the user can click a menu item.
+  // 1. HIGHEST PRIORITY: exact frame match from menus.onShown
   if (lastShownMenuContext) {
     const { tabId: shownTabId, frameId } = lastShownMenuContext;
-
-    // Try the tabId+frameId combination reported by onShown
-    const key1 = `${shownTabId}-${frameId}`;
-    if (framePortMap.has(key1)) {
-      console.log("[Translator] getPortForTab: framePortMap hit key1:", key1);
-      return framePortMap.get(key1);
+    const key = `${shownTabId}-${frameId}`;
+    if (framePortMap.has(key)) {
+      console.log("[Translator] Exact frame match from onShown:", key);
+      return framePortMap.get(key);
     }
-
-    // Try with the tabId from onClicked (may differ from onShown in edge cases)
-    const key2 = `${tabId}-${frameId}`;
-    if (framePortMap.has(key2)) {
-      console.log("[Translator] getPortForTab: framePortMap hit key2:", key2);
-      return framePortMap.get(key2);
-    }
-
-    // For non-zero frameIds the frame is unique (an iframe), scan all entries
-    if (frameId !== 0) {
-      const suffix = `-${frameId}`;
-      for (const [k, p] of framePortMap.entries()) {
-        if (k.endsWith(suffix)) {
-          console.log("[Translator] getPortForTab: framePortMap suffix hit:", k);
-          return p;
-        }
-      }
+    // If the exact frame isn't found, try the shownTabId in portMap
+    if (portMap.has(shownTabId)) {
+      console.log("[Translator] Tab match from onShown:", shownTabId);
+      return portMap.get(shownTabId);
     }
   }
-
-  // 2. Exact tabId match (portMap)
-  if (tabId != null && portMap.has(tabId)) return portMap.get(tabId);
-  // 3. Most recently activated tab
-  if (lastActivatedTabId != null && portMap.has(lastActivatedTabId)) return portMap.get(lastActivatedTabId);
-  // 4. Last connected port
+  // 2. tabId passed by menus.onClicked
+  if (tabId != null && portMap.has(tabId)) {
+    console.log("[Translator] Tab match from onClicked:", tabId);
+    return portMap.get(tabId);
+  }
+  // 3. Last resort
+  console.warn("[Translator] No precise match – using lastActivePort");
   return lastActivePort;
 }
 
 messenger.runtime.onConnect.addListener((port) => {
   if (port.name !== "translator") return;
 
-  const tabId  = port.sender?.tab?.id ?? null;
+  const tabId = port.sender?.tab?.id ?? null;
   const frameId = port.sender?.frameId ?? 0;
-  const fKey   = `${tabId}-${frameId}`;
-  console.log("[Translator] Content script connected, tabId:", tabId, "frameId:", frameId);
+  const fKey = `${tabId}-${frameId}`;
+  console.log("[Translator] Content script connected – tabId:", tabId, "frameId:", frameId, "key:", fKey);
 
   if (tabId != null) portMap.set(tabId, port);
   framePortMap.set(fKey, port);
   lastActivePort = port;
 
   port.onDisconnect.addListener(() => {
-    console.log("[Translator] Content script disconnected, tabId:", tabId, "frameId:", frameId);
+    console.log("[Translator] Content script disconnected – tabId:", tabId, "frameId:", frameId);
     if (tabId != null && portMap.get(tabId) === port) portMap.delete(tabId);
     framePortMap.delete(fKey);
     if (lastActivePort === port) {
@@ -339,11 +329,6 @@ messenger.runtime.onConnect.addListener((port) => {
 
   // Handle messages from content script through the port
   port.onMessage.addListener(async (message) => {
-    // "active" sent by the contextmenu listener in content script — kept as
-    // an extra fallback in case menus.onShown is not available.
-    if (message.command === "contextmenu" || message.command === "active") {
-      return; // no-op: menus.onShown supersedes this
-    }
 
     if (message.command === "getMessages") {
       // Send localized messages to content script
@@ -606,8 +591,10 @@ let toggleMenuCreated = false;
 // --- Event Handlers ---
 
 messenger.menus.onClicked.addListener(async (info, tab) => {
-  // Consume and clear the menu context captured by onShown
-  const shownContext = lastShownMenuContext;
+  const tabId = tab?.id ?? null;
+
+  // Retrieve port BEFORE clearing the onShown context
+  const port = getPortForTab(tabId);
   lastShownMenuContext = null;
 
   // Check if it's a service-specific language menu item
@@ -626,7 +613,6 @@ messenger.menus.onClicked.addListener(async (info, tab) => {
   }
 
   if (service && targetLang) {
-    const tabId = tab?.id ?? null;
     console.log(`[Translator] ${service} - Translate to '${targetLang}' (${LANGUAGE_NAMES[targetLang]}) menu clicked, tabId:`, tabId);
 
     // Save the selected language permanently for this service
@@ -642,18 +628,14 @@ messenger.menus.onClicked.addListener(async (info, tab) => {
 
     console.log(`[Translator] Saved ${storageKey} = ${targetLang}, service = ${service}`);
 
-    // Find the port for the tab where the menu was clicked
-    const port = getPortForTab(tabId);
     if (port) {
-      console.log("[Translator] Port active for tab", tabId, ", sending startTranslation with target:", targetLang);
+      console.log("[Translator] Port active, sending startTranslation with target:", targetLang);
       port.postMessage({ command: "startTranslation", targetLanguage: targetLang });
     } else {
-      console.log("[Translator] No active port for tab", tabId, ", attempting injection as fallback");
+      console.log("[Translator] No active port, attempting injection as fallback");
       await injectAndSend(targetLang, tabId);
     }
   } else if (info.menuItemId === "toggle-original") {
-    const tabId = tab?.id ?? null;
-    const port = getPortForTab(tabId);
     if (port) {
       port.postMessage({ command: "reloadOriginal" });
     }
