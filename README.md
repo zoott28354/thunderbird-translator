@@ -30,7 +30,7 @@ A Thunderbird addon that replaces the email body with its translation (in-place)
    - Recommended: `ollama pull translategemma` (3GB, optimized)
    - Alternatives: `llama3.2`, `mistral`
 
-3. **Thunderbird** 128 or later
+3. **Thunderbird** 128 or later (ESR and non-ESR)
 
 ⚠️ **Important note**: Before using Ollama, you'll need to configure `OLLAMA_ORIGINS` (see "Initial Configuration" section below).
 
@@ -144,11 +144,13 @@ OLLAMA_ORIGINS=moz-extension://*,http://localhost:11434
 ## 🔒 Security
 
 ### ✅ What is Secure
-- **No data sent online** - Everything is processed locally by Ollama
-- **Local connection** - Communicates only with `localhost:11434`
+- **Ollama mode**: 100% local — no data sent online, everything processed on your PC
+- **Google Translate / LibreTranslate mode**: email text is sent to external servers for translation (no other data is shared)
 - **No tracking** - No statistics, tracking, or remote logs
 - **No credentials** - Doesn't save passwords or sensitive information
 - **Minimal permissions** - Only accesses email text for translation
+
+> **Want total privacy?** Use the Ollama-only version: [Thunderbird Ollama Translator](https://github.com/zoott28354/thunderbird-ollama-translator) — zero external connections, everything stays on your machine.
 
 ### 🛡️ Required Permissions
 - `messagesRead` - Reads email content (for translation)
@@ -188,10 +190,16 @@ LibreTranslate uses free public instances. The addon automatically tries 3 insta
    setx OLLAMA_ORIGINS "moz-extension://*"
    ```
 
-   **Linux/Mac:**
+   **Linux:**
    ```bash
    echo 'export OLLAMA_ORIGINS="moz-extension://*"' >> ~/.bashrc
    source ~/.bashrc
+   ```
+
+   **macOS:**
+   ```bash
+   echo 'export OLLAMA_ORIGINS="moz-extension://*"' >> ~/.zshrc
+   source ~/.zshrc
    ```
 
 3. **Close and reopen the terminal**, then start Ollama:
