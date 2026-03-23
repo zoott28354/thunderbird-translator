@@ -134,5 +134,21 @@
   "translationComplete": {
     "message": "Übersetzung abgeschlossen!",
     "description": "Meldung wenn die Übersetzung abgeschlossen ist"
+  },
+  "quickTranslate": {
+    "message": "Übersetzen",
+    "description": "Beschriftung der schwebenden Schnellübersetzungsschaltfläche"
+  },
+  "restoreOriginal": {
+    "message": "Original wiederherstellen",
+    "description": "Schaltfläche zum Wiederherstellen des ursprünglichen E-Mail-Inhalts"
+  },
+  "autoTranslateLabel": {
+    "message": "Automatisch übersetzen beim Öffnen",
+    "description": "Beschriftung für den Automatisch-übersetzen-Schalter auf der Optionsseite"
+  },
+  "shortcutHint": {
+    "message": "Drücken Sie Alt+W, um schnell zu übersetzen oder wiederherzustellen. Sie können diesen Shortcut in Thunderbirds Erweiterungsverknüpfungen verwalten anpassen.",
+    "description": "Hinweistext zur Erklärung des Tastaturkürzels"
   }
 }

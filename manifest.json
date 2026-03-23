@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Thunderbird Translator",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Translate emails using Ollama, Google Translate or LibreTranslate",
   "author": "zoott28354",
   "default_locale": "en",
@@ -38,5 +38,14 @@
   "icons": {
     "48": "icons/translate-48.png",
     "96": "icons/translate-96.png"
+  },
+
+  "commands": {
+    "quick-translate": {
+      "suggested_key": {
+        "default": "Alt+W"
+      },
+      "description": "Quick translate / restore original"
+    }
   }
 }

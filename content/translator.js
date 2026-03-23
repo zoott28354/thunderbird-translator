@@ -35,6 +35,55 @@
     "error": "Translation error"
   };
 
+  // --- Quick Translate Button State Machine ---
+
+  const BTN_STATE = { IDLE: 'idle', TRANSLATING: 'translating', TRANSLATED: 'translated' };
+  let btnState = BTN_STATE.IDLE;
+
+  function onButtonClick() {
+    if (btnState === BTN_STATE.IDLE) {
+      startTranslation();
+    } else if (btnState === BTN_STATE.TRANSLATED) {
+      reloadPage();
+    }
+    // BTN_STATE.TRANSLATING: 忽略，不执行任何操作
+  }
+
+  function createQuickTranslateButton() {
+    // Avoid duplicate injection
+    if (document.getElementById('ollama-quick-btn')) return;
+
+    const btn = document.createElement('button');
+    btn.id = 'ollama-quick-btn';
+    btn.className = 'ollama-quick-btn';
+    btn.addEventListener('click', onButtonClick);
+    document.body.appendChild(btn);
+
+    updateButtonState(BTN_STATE.IDLE);
+  }
+
+  function updateButtonState(state) {
+    btnState = state;
+    const btn = document.getElementById('ollama-quick-btn');
+    if (!btn) return;
+
+    // Remove all state classes
+    btn.classList.remove('ollama-quick-btn--translating', 'ollama-quick-btn--translated');
+
+    if (state === BTN_STATE.IDLE) {
+      btn.textContent = messages.quickTranslate || 'Translate';
+      btn.disabled = false;
+    } else if (state === BTN_STATE.TRANSLATING) {
+      btn.textContent = messages.translating || 'Translating...';
+      btn.classList.add('ollama-quick-btn--translating');
+      btn.disabled = true;
+    } else if (state === BTN_STATE.TRANSLATED) {
+      btn.textContent = messages.restoreOriginal || 'Restore Original';
+      btn.classList.add('ollama-quick-btn--translated');
+      btn.disabled = false;
+    }
+  }
+
   // --- Port to background ---
 
   const port = browser.runtime.connect({ name: "translator" });
@@ -54,6 +103,7 @@
     if (message.command === "messages") {
       messages = message.data;
       console.log("[Translator Content Script] Messages loaded");
+      createQuickTranslateButton();
       return;
     }
 
@@ -86,6 +136,11 @@
     } else if (message.command === "reloadOriginal") {
       console.log("[Translator Content Script] Reloading original email");
       reloadPage();
+    } else if (message.command === "getTranslationState") {
+      port.postMessage({ command: "translationState", isTranslated: nodeMap.size > 0 });
+    } else if (message.command === "toggleTranslate") {
+      if (nodeMap.size > 0) reloadPage();
+      else startTranslation();
     }
   });
 
@@ -263,6 +318,7 @@
   }
 
   async function startTranslation() {
+    updateButtonState(BTN_STATE.TRANSLATING);
     const blocks = extractTextBlocks();
 
     if (blocks.length === 0) {
@@ -308,12 +364,15 @@
 
       console.log(`[Translator] Translation complete`);
       showToast(messages.success, true);
+      updateButtonState(BTN_STATE.TRANSLATED);
     } catch (e) {
       console.error("[Translator] Translation failed:", e);
       if (e.message.includes("Failed to fetch") || e.message.includes("NetworkError")) {
         showToast(messages.errorUnreachable, true);
+        updateButtonState(BTN_STATE.IDLE);
       } else {
         showToast(messages.error, true);
+        updateButtonState(BTN_STATE.IDLE);
       }
       return;
     }
@@ -420,6 +479,7 @@
 
     // Clear the nodeMap after restoration
     nodeMap.clear();
+    updateButtonState(BTN_STATE.IDLE);
 
     // Hide any active toast
     if (toastEl) {

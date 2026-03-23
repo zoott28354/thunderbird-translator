@@ -48,6 +48,7 @@ async function loadSettings() {
   serviceSelect.value = settings.service || "ollama";
   targetLanguageSelect.value = settings.targetLanguage || "it";
   urlInput.value = settings.ollamaUrl || "http://localhost:11434";
+  document.getElementById('autoTranslate').checked = settings.autoTranslate || false;
   
   // Mostra/nascondi la sezione Ollama
   ollamaSection.style.display = serviceSelect.value === "ollama" ? "block" : "none";
@@ -160,6 +161,7 @@ saveBtn.addEventListener("click", async () => {
     targetLanguage,
     ollamaUrl,
     model,
+    autoTranslate: document.getElementById('autoTranslate').checked,
   };
 
   await browser.runtime.sendMessage({

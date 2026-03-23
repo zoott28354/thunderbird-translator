@@ -16,6 +16,8 @@ A Thunderbird addon that replaces the email body with its translation (in-place)
 - 🌐 **Multiple translation services** - Ollama, Google Translate, LibreTranslate
 - 🌍 **Multi-language translation** - Supports 10 languages: Italian, English, Spanish, French, German, Portuguese, Russian, Japanese, Chinese, Korean
 - 🖱️ **Simple interface** - Right-click on email and choose service and language
+- ⌨️ **Keyboard shortcut** - Press `Alt+W` (Windows/Linux) or `Option+W` (macOS) to instantly translate or restore the original
+- 🔄 **Auto-translate** - Automatically translate every email as soon as it's opened (enable in settings)
 - 💾 **Persistent settings** - Your configurations are saved automatically
 - 🌐 **Multilingual interface** - The addon is available in 7 languages: 🇮🇹 Italian, 🇬🇧 English, 🇩🇪 German, 🇫🇷 French, 🇪🇸 Spanish, 🇵🇹 Portuguese, 🇷🇺 Russian (automatically adapts to Thunderbird's language)
 
@@ -141,6 +143,26 @@ OLLAMA_ORIGINS=moz-extension://*,http://localhost:11434
 - After translation, **right-click** on the text
 - Select **"Show Original"** to restore the original text
 
+## ⌨️ Keyboard Shortcut
+
+Press `Alt+W` (Windows/Linux) or `Option+W` (macOS) to **toggle translation** on the currently displayed email — one press to translate, another to restore the original.
+
+**Scope and requirements:**
+- Works only when an email is open in the **message display area** (preview pane or separate window)
+- The shortcut has **no effect** in the folder list, message list, or compose window
+- If a translation is already in progress, the shortcut is ignored until it completes
+- The default shortcut can be changed in Thunderbird: **Menu > Tools > Add-ons > Manage Extension Shortcuts**
+
+> **Note**: After installing or updating the addon, Thunderbird must be restarted (or the addon fully reinstalled) for the shortcut to be registered.
+
+## 🔄 Auto-Translate
+
+Enable **"Auto-translate on open"** in the addon settings to automatically translate every email as soon as you open it, using the currently selected service and language.
+
+- Go to **Menu > Tools > Add-ons > "Thunderbird Translator" > Preferences**
+- Check **"Auto-translate on open"**
+- Click **Save**
+
 ## 🔒 Security
 
 ### ✅ What is Secure
@@ -216,6 +238,12 @@ LibreTranslate uses free public instances. The addon automatically tries 3 insta
 **Note**: `moz-extension://*` allows only Firefox/Thunderbird extensions to access Ollama, blocking external websites (more secure).
 
 ## 📜 Changelog
+
+### v1.6.0
+- **Keyboard shortcut** (`Alt+W` / `Option+W`): toggle translation on the current email; works only when an email is displayed in the preview pane or a separate window
+- **Auto-translate on open**: new option in settings to automatically translate every email as soon as it's opened
+- **Quick-translate floating button**: a small button appears on the email body for one-click translate / restore
+- Fix: `autoTranslate` setting was not persisted when saving from the options page
 
 ### v1.5.0
 - Deterministic tab/preview routing — translating from a separate email tab no longer interferes with the preview pane (and vice versa)

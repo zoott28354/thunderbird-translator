@@ -134,5 +134,21 @@
   "translationComplete": {
     "message": "Traduzione completata!",
     "description": "Messaggio mostrato quando la traduzione è completata"
+  },
+  "quickTranslate": {
+    "message": "Traduci",
+    "description": "Etichetta del pulsante flottante di traduzione rapida"
+  },
+  "restoreOriginal": {
+    "message": "Ripristina originale",
+    "description": "Pulsante per ripristinare il contenuto originale dell'email"
+  },
+  "autoTranslateLabel": {
+    "message": "Traduzione automatica all'apertura",
+    "description": "Etichetta per l'interruttore di traduzione automatica nella pagina delle opzioni"
+  },
+  "shortcutHint": {
+    "message": "Premi Alt+W per tradurre o ripristinare rapidamente. Puoi personalizzare questa scorciatoia in Gestisci scorciatoie estensioni di Thunderbird.",
+    "description": "Testo suggerimento che spiega la scorciatoia da tastiera"
   }
 }

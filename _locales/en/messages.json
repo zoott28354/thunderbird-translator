@@ -134,5 +134,21 @@
   "translationComplete": {
     "message": "Translation complete!",
     "description": "Message shown when translation is done"
+  },
+  "quickTranslate": {
+    "message": "Translate",
+    "description": "Quick translate floating button label"
+  },
+  "restoreOriginal": {
+    "message": "Restore Original",
+    "description": "Button to restore original email content"
+  },
+  "autoTranslateLabel": {
+    "message": "Auto-translate on open",
+    "description": "Label for auto-translate toggle in options page"
+  },
+  "shortcutHint": {
+    "message": "Press Alt+W to quickly translate or restore. You can customize this shortcut in Thunderbird's Manage Extension Shortcuts.",
+    "description": "Hint text explaining the keyboard shortcut"
   }
 }

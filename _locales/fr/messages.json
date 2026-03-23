@@ -134,5 +134,21 @@
   "translationComplete": {
     "message": "Traduction terminée !",
     "description": "Message affiché quand la traduction est terminée"
+  },
+  "quickTranslate": {
+    "message": "Traduire",
+    "description": "Libellé du bouton flottant de traduction rapide"
+  },
+  "restoreOriginal": {
+    "message": "Restaurer l'original",
+    "description": "Bouton pour restaurer le contenu original de l'email"
+  },
+  "autoTranslateLabel": {
+    "message": "Traduction automatique à l'ouverture",
+    "description": "Libellé pour le commutateur de traduction automatique dans la page des options"
+  },
+  "shortcutHint": {
+    "message": "Appuyez sur Alt+W pour traduire ou restaurer rapidement. Vous pouvez personnaliser ce raccourci dans Gérer les raccourcis d'extensions de Thunderbird.",
+    "description": "Texte d'indication expliquant le raccourci clavier"
   }
 }

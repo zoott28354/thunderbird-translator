@@ -47,6 +47,7 @@ async function getSettings() {
     ollamaTargetLang: DEFAULT_TARGET_LANGUAGE,
     googleTargetLang: "en",
     libreTargetLang: "en",
+    autoTranslate: false,
   };
   const stored = await messenger.storage.local.get(defaults);
   return stored;
@@ -348,6 +349,8 @@ messenger.runtime.onConnect.addListener((port) => {
           success: getMsg("translationComplete", "Translation complete!"),
           errorUnreachable: "Error: " + getMsg("translationError", "Translation error"),
           error: getMsg("translationError", "Translation error"),
+          quickTranslate: getMsg("quickTranslate", "Translate"),
+          restoreOriginal: getMsg("restoreOriginal", "Restore original"),
         }
       });
       return;
@@ -388,6 +391,15 @@ messenger.runtime.onConnect.addListener((port) => {
           title: messenger.i18n.getMessage("showOriginal"),
           visible: true,
         });
+      }
+    }
+
+    if (message.command === "translationState") {
+      // Resolve any pending getTranslationState query for this tab
+      const resolve = translationStatePending.get(tabId);
+      if (resolve) {
+        translationStatePending.delete(tabId);
+        resolve(message.isTranslated === true);
       }
     }
   });
@@ -588,6 +600,14 @@ async function getInstalledModels(ollamaUrl) {
 
 let toggleMenuCreated = false;
 
+// --- Quick-translate shortcut state ---
+
+// Map of tabId → resolve function, for pending translationState queries
+const translationStatePending = new Map();
+
+// Flag to prevent duplicate shortcut triggers while translation is in progress
+let isTranslating = false;
+
 // --- Event Handlers ---
 
 messenger.menus.onClicked.addListener(async (info, tab) => {
@@ -679,6 +699,7 @@ messenger.runtime.onMessage.addListener(async (message, sender) => {
       targetLanguage: targetLang,
       ollamaUrl: message.ollamaUrl,
       model: message.model,
+      autoTranslate: message.autoTranslate === true,
     };
 
     // Update the appropriate service-specific language
@@ -696,6 +717,101 @@ messenger.runtime.onMessage.addListener(async (message, sender) => {
     createContextMenu();
 
     return { success: true };
+  }
+});
+
+// --- Auto-translate: onMessageDisplayed listener ---
+
+messenger.messageDisplay.onMessageDisplayed.addListener(async (tab, message) => {
+  const settings = await getSettings();
+  if (!settings.autoTranslate) return;
+
+  const tabId = tab.id;
+  const targetLanguage = settings.targetLanguage;
+
+  // Poll for port readiness: interval 50ms, timeout 3000ms (60 attempts)
+  let waited = 0;
+  const interval = setInterval(() => {
+    waited += 50;
+    const port = portMap.get(tabId);
+    if (port) {
+      clearInterval(interval);
+      console.log("[Translator] Auto-translate: port ready, sending startTranslation to tab", tabId);
+      port.postMessage({ command: "startTranslation", targetLanguage });
+    } else if (waited >= 3000) {
+      clearInterval(interval);
+      console.error("[Translator] Auto-translate: port not ready after 3s timeout for tab", tabId);
+    }
+  }, 50);
+});
+
+// --- Keyboard shortcut: quick-translate command ---
+
+messenger.commands.onCommand.addListener(async (command) => {
+  if (command !== "quick-translate") return;
+
+  // Prevent duplicate triggers while translation is in progress
+  if (isTranslating) {
+    console.log("[Translator] Quick-translate shortcut ignored: translation already in progress");
+    return;
+  }
+
+  // Find the active messageDisplay tab
+  let tabs;
+  try {
+    tabs = await messenger.tabs.query({ type: "messageDisplay" });
+  } catch (e) {
+    console.warn("[Translator] commands.onCommand: tabs.query failed:", e.message);
+    return;
+  }
+
+  if (!tabs || tabs.length === 0) {
+    console.warn("[Translator] Quick-translate shortcut: no messageDisplay tab found");
+    return;
+  }
+
+  const tab = tabs[0];
+  const tabId = tab.id;
+  const port = portMap.get(tabId) || lastActivePort;
+
+  if (!port) {
+    console.warn("[Translator] Quick-translate shortcut: no port available for tab", tabId);
+    return;
+  }
+
+  // Set flag immediately to prevent re-entry from concurrent shortcut triggers
+  isTranslating = true;
+
+  try {
+    // Query translation state with 500ms timeout, default isTranslated=false
+    const isTranslated = await new Promise((resolve) => {
+      const timer = setTimeout(() => {
+        translationStatePending.delete(tabId);
+        console.warn("[Translator] getTranslationState timed out, defaulting to isTranslated=false");
+        resolve(false);
+      }, 500);
+
+      translationStatePending.set(tabId, (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      });
+
+      port.postMessage({ command: "getTranslationState" });
+    });
+
+    const settings = await getSettings();
+    if (isTranslated) {
+      console.log("[Translator] Quick-translate: sending reloadOriginal to tab", tabId);
+      port.postMessage({ command: "reloadOriginal" });
+    } else {
+      console.log("[Translator] Quick-translate: sending startTranslation to tab", tabId);
+      port.postMessage({ command: "startTranslation", targetLanguage: settings.targetLanguage });
+    }
+  } finally {
+    // Reset flag after a short delay to allow the command to be processed
+    setTimeout(() => {
+      isTranslating = false;
+    }, 500);
   }
 });
 
