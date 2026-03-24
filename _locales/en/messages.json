@@ -123,6 +123,10 @@
     "message": "Translate with Ollama",
     "description": "Context menu parent title"
   },
+  "openaiCompatibleMenuTitle": {
+    "message": "Translate with OpenAI Compatible API",
+    "description": "Context menu parent title for OpenAI Compatible API (oMLX, vLLM, etc.)"
+  },
   "googleTranslateMenuTitle": {
     "message": "Translate with Google Translate",
     "description": "Context menu parent title for Google Translate"
@@ -150,5 +154,45 @@
   "shortcutHint": {
     "message": "Press Alt+W to quickly translate or restore. You can customize this shortcut in Thunderbird's Manage Extension Shortcuts.",
     "description": "Hint text explaining the keyboard shortcut"
+  },
+  "openAIBaseUrl": {
+    "message": "Base URL",
+    "description": "Label for OpenAI Compatible API base URL"
+  },
+  "openAIBaseUrlHint": {
+    "message": "e.g., http://localhost:8000 for oMLX",
+    "description": "Hint for OpenAI Compatible API base URL"
+  },
+  "openAIModel": {
+    "message": "Model Name",
+    "description": "Label for OpenAI Compatible API model name"
+  },
+  "openAIModelPlaceholder": {
+    "message": "model-name",
+    "description": "Placeholder for OpenAI Compatible API model name"
+  },
+  "openAIModelHint": {
+    "message": "Enter the exact model name as shown in your API server",
+    "description": "Hint for OpenAI Compatible API model name"
+  },
+  "openAIApiKey": {
+    "message": "API Key (optional)",
+    "description": "Label for OpenAI Compatible API key"
+  },
+  "openAIApiKeyPlaceholder": {
+    "message": "sk-...",
+    "description": "Placeholder for OpenAI Compatible API key"
+  },
+  "openAIApiKeyHint": {
+    "message": "Only required if your server requires authentication",
+    "description": "Hint for OpenAI Compatible API key"
+  },
+  "openAIBaseUrlRequired": {
+    "message": "Enter the Base URL",
+    "description": "Validation message for OpenAI Compatible API base URL"
+  },
+  "openAIModelRequired": {
+    "message": "Enter the model name",
+    "description": "Validation message for OpenAI Compatible API model"
   }
 }

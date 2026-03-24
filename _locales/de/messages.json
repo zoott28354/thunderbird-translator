@@ -150,5 +150,49 @@
   "shortcutHint": {
     "message": "Drücken Sie Alt+W, um schnell zu übersetzen oder wiederherzustellen. Sie können diesen Shortcut in Thunderbirds Erweiterungsverknüpfungen verwalten anpassen.",
     "description": "Hinweistext zur Erklärung des Tastaturkürzels"
+  },
+  "openaiCompatibleMenuTitle": {
+    "message": "Übersetzen mit OpenAI Compatible API",
+    "description": "Kontextmenütitel für OpenAI Compatible API (oMLX, vLLM, usw.)"
+  },
+  "openAIBaseUrl": {
+    "message": "Basis-URL",
+    "description": "Label für OpenAI Compatible API Basis-URL"
+  },
+  "openAIBaseUrlHint": {
+    "message": "z.B. http://localhost:8000 für oMLX",
+    "description": "Hinweis für OpenAI Compatible API Basis-URL"
+  },
+  "openAIModel": {
+    "message": "Modellname",
+    "description": "Label für OpenAI Compatible API Modellname"
+  },
+  "openAIModelPlaceholder": {
+    "message": "modellname",
+    "description": "Platzhalter für OpenAI Compatible API Modellname"
+  },
+  "openAIModelHint": {
+    "message": "Geben Sie den genauen Modellnamen ein, wie er in Ihrem API-Server angezeigt wird",
+    "description": "Hinweis für OpenAI Compatible API Modellname"
+  },
+  "openAIApiKey": {
+    "message": "API-Schlüssel (optional)",
+    "description": "Label für OpenAI Compatible API Schlüssel"
+  },
+  "openAIApiKeyPlaceholder": {
+    "message": "sk-...",
+    "description": "Platzhalter für OpenAI Compatible API Schlüssel"
+  },
+  "openAIApiKeyHint": {
+    "message": "Nur erforderlich, wenn Ihr Server eine Authentifizierung erfordert",
+    "description": "Hinweis für OpenAI Compatible API Schlüssel"
+  },
+  "openAIBaseUrlRequired": {
+    "message": "Geben Sie die Basis-URL ein",
+    "description": "Validierungsnachricht für OpenAI Compatible API Basis-URL"
+  },
+  "openAIModelRequired": {
+    "message": "Geben Sie den Modellnamen ein",
+    "description": "Validierungsnachricht für OpenAI Compatible API Modell"
   }
 }

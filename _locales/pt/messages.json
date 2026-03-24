@@ -150,5 +150,49 @@
   "shortcutHint": {
     "message": "Pressione Alt+W para traduzir ou restaurar rapidamente. Você pode personalizar este atalho em Gerenciar atalhos de extensões do Thunderbird.",
     "description": "Texto de dica explicando o atalho de teclado"
+  },
+  "openaiCompatibleMenuTitle": {
+    "message": "Traduzir com API Compatível OpenAI",
+    "description": "Título do menu contextual para API Compatível OpenAI (oMLX, vLLM, etc.)"
+  },
+  "openAIBaseUrl": {
+    "message": "URL Base",
+    "description": "Rótulo para URL base da API Compatível OpenAI"
+  },
+  "openAIBaseUrlHint": {
+    "message": "ex. http://localhost:8000 para oMLX",
+    "description": "Dica para URL base da API Compatível OpenAI"
+  },
+  "openAIModel": {
+    "message": "Nome do Modelo",
+    "description": "Rótulo para nome do modelo da API Compatível OpenAI"
+  },
+  "openAIModelPlaceholder": {
+    "message": "nome-do-modelo",
+    "description": "Marcador para nome do modelo da API Compatível OpenAI"
+  },
+  "openAIModelHint": {
+    "message": "Digite o nome exato do modelo como mostrado em seu servidor API",
+    "description": "Dica para nome do modelo da API Compatível OpenAI"
+  },
+  "openAIApiKey": {
+    "message": "Chave API (opcional)",
+    "description": "Rótulo para chave API da API Compatível OpenAI"
+  },
+  "openAIApiKeyPlaceholder": {
+    "message": "sk-...",
+    "description": "Marcador para chave API da API Compatível OpenAI"
+  },
+  "openAIApiKeyHint": {
+    "message": "Apenas necessário se seu servidor exigir autenticação",
+    "description": "Dica para chave API da API Compatível OpenAI"
+  },
+  "openAIBaseUrlRequired": {
+    "message": "Digite a URL base",
+    "description": "Mensagem de validação para URL base da API Compatível OpenAI"
+  },
+  "openAIModelRequired": {
+    "message": "Digite o nome do modelo",
+    "description": "Mensagem de validação para modelo da API Compatível OpenAI"
   }
 }

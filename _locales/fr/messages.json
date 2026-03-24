@@ -150,5 +150,49 @@
   "shortcutHint": {
     "message": "Appuyez sur Alt+W pour traduire ou restaurer rapidement. Vous pouvez personnaliser ce raccourci dans Gérer les raccourcis d'extensions de Thunderbird.",
     "description": "Texte d'indication expliquant le raccourci clavier"
+  },
+  "openaiCompatibleMenuTitle": {
+    "message": "Traduire avec l'API Compatible OpenAI",
+    "description": "Titre du menu contextuel pour l'API Compatible OpenAI (oMLX, vLLM, etc.)"
+  },
+  "openAIBaseUrl": {
+    "message": "URL de base",
+    "description": "Label pour l'URL de base de l'API Compatible OpenAI"
+  },
+  "openAIBaseUrlHint": {
+    "message": "par ex. http://localhost:8000 pour oMLX",
+    "description": "Indice pour l'URL de base de l'API Compatible OpenAI"
+  },
+  "openAIModel": {
+    "message": "Nom du modèle",
+    "description": "Label pour le nom du modèle de l'API Compatible OpenAI"
+  },
+  "openAIModelPlaceholder": {
+    "message": "nom-du-modele",
+    "description": "Placeholder pour le nom du modèle de l'API Compatible OpenAI"
+  },
+  "openAIModelHint": {
+    "message": "Entrez le nom exact du modèle tel qu'affiché dans votre serveur API",
+    "description": "Indice pour le nom du modèle de l'API Compatible OpenAI"
+  },
+  "openAIApiKey": {
+    "message": "Clé API (optionnel)",
+    "description": "Label pour la clé API de l'API Compatible OpenAI"
+  },
+  "openAIApiKeyPlaceholder": {
+    "message": "sk-...",
+    "description": "Placeholder pour la clé API de l'API Compatible OpenAI"
+  },
+  "openAIApiKeyHint": {
+    "message": "Requis uniquement si votre serveur nécessite une authentification",
+    "description": "Indice pour la clé API de l'API Compatible OpenAI"
+  },
+  "openAIBaseUrlRequired": {
+    "message": "Entrez l'URL de base",
+    "description": "Message de validation pour l'URL de base de l'API Compatible OpenAI"
+  },
+  "openAIModelRequired": {
+    "message": "Entrez le nom du modèle",
+    "description": "Message de validation pour le modèle de l'API Compatible OpenAI"
   }
 }

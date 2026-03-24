@@ -1,5 +1,5 @@
 # Thunderbird Translator
-**(Local Ollama · Google Translate · LibreTranslate)**
+**(Local Ollama · OpenAI Compatible API (oMLX, vLLM) · Google Translate · LibreTranslate)**
 
 <p align="center">
   <img src="preview.png" alt="Thunderbird Translator Preview" width="600">
@@ -13,7 +13,8 @@ A Thunderbird addon that replaces the email body with its translation (in-place)
 
 - 🏠 **Local translation** - With Ollama: no data sent online, everything stays on your PC
 - 🤖 **Supports all Ollama models** - Translategemma, Llama, Mistral, Neural Chat, etc.
-- 🌐 **Multiple translation services** - Ollama, Google Translate, LibreTranslate
+- 🔌 **OpenAI Compatible API** - Connect to oMLX, vLLM, LocalAI, LM Studio, or any OpenAI-compatible server
+- 🌐 **Multiple translation services** - Ollama, OpenAI Compatible API, Google Translate, LibreTranslate
 - 🌍 **Multi-language translation** - Supports 10 languages: Italian, English, Spanish, French, German, Portuguese, Russian, Japanese, Chinese, Korean
 - 🖱️ **Simple interface** - Right-click on email and choose service and language
 - ⌨️ **Keyboard shortcut** - Press `Alt+W` (Windows/Linux) or `Option+W` (macOS) to instantly translate or restore the original
@@ -35,6 +36,21 @@ A Thunderbird addon that replaces the email body with its translation (in-place)
 3. **Thunderbird** 128 or later (ESR and non-ESR)
 
 ⚠️ **Important note**: Before using Ollama, you'll need to configure `OLLAMA_ORIGINS` (see "Initial Configuration" section below).
+
+### For OpenAI Compatible API (oMLX, vLLM, LocalAI, LM Studio)
+
+1. **An OpenAI-compatible server** running locally or remotely
+   - oMLX: https://github.com/jundot/omlx (macOS, Apple Silicon)
+   - vLLM: https://github.com/vllm-project/vllm
+   - LocalAI: https://github.com/mudler/LocalAI
+   - LM Studio: https://lmstudio.ai
+
+2. **Model downloaded** in your server
+   - Example for oMLX: Download any MLX model from HuggingFace
+
+3. **Server URL** (e.g., `http://localhost:8000` for oMLX)
+
+4. **API Key** (optional, only if your server requires authentication)
 
 ### For Google Translate or LibreTranslate (online, free)
 
@@ -69,10 +85,12 @@ A Thunderbird addon that replaces the email body with its translation (in-place)
    - Menu > Tools > Add-ons > "Thunderbird Translator" > Preferences
 
 ### 2. Choose service and language
-   - **Service**: Ollama (local) / Google Translate / LibreTranslate
+   - **Service**: Ollama (local) / OpenAI Compatible API (oMLX, vLLM, etc.) / Google Translate / LibreTranslate
    - **Language**: Italian, English, Spanish, French, German, Portuguese, Russian, Japanese, Chinese, Korean
 
-### 3. If using Ollama: REQUIRED Configuration
+### 3. Configure your selected service
+
+#### If using Ollama: REQUIRED Configuration
 
 #### ⚠️ Configure OLLAMA_ORIGINS
 
@@ -115,12 +133,24 @@ ollama serve
 OLLAMA_ORIGINS=moz-extension://*,http://localhost:11434
 ```
 
-#### 4. Configure URL and model
-   - **Ollama URL**: `http://localhost:11434` (default)
-   - **Test connection**: Click to verify that Ollama is reachable
-   - **Model**: Select `translategemma` (recommended) or another installed model
+#### If using OpenAI Compatible API (oMLX, vLLM, LocalAI, etc.)
 
-#### 5. Save
+1. **Base URL**: Enter your server's base URL
+   - oMLX default: `http://localhost:8000`
+   - vLLM default: `http://localhost:8000`
+   - LocalAI default: `http://localhost:8080`
+
+2. **Model Name**: Enter the exact model name as shown in your server
+   - For oMLX: Any downloaded MLX model (e.g., `Qwen3-Coder-Next-8bit`)
+   - For vLLM: Any supported model (e.g., `Qwen/Qwen2.5-7B-Instruct`)
+
+3. **API Key** (optional): Only required if your server requires authentication
+   - oMLX: Set via `--api-key` flag when starting server
+   - Leave empty if no authentication is required
+
+4. **Test connection**: Click "Test Connection" to verify that your server is reachable
+
+#### 4. Save
    - Click "Save"
 
 ## 🎯 How to Use
@@ -130,6 +160,7 @@ OLLAMA_ORIGINS=moz-extension://*,http://localhost:11434
 2. **Right-click** on the email body
 3. **Choose the translation service**:
    - **"Translate with Ollama"** → Local and private translation (requires Ollama installed)
+   - **"Translate with OpenAI Compatible API"** → Connect to oMLX, vLLM, LocalAI, LM Studio, etc.
    - **"Translate with Google Translate"** → Free online translation
    - **"Translate with LibreTranslate"** → Open-source online translation
 4. **Select the target language** from the submenu
@@ -167,7 +198,8 @@ Enable **"Auto-translate on open"** in the addon settings to automatically trans
 
 ### ✅ What is Secure
 - **Ollama mode**: 100% local — no data sent online, everything processed on your PC
-- **Google Translate / LibreTranslate mode**: email text is sent to external servers for translation (no other data is shared)
+- **OpenAI Compatible API mode**: Data is sent to your configured server (local or remote). When running locally (oMLX, vLLM, LocalAI), data stays on your machine.
+- **Google Translate / LibreTranslate mode**: Email text is sent to external servers for translation (no other data is shared)
 - **No tracking** - No statistics, tracking, or remote logs
 - **No credentials** - Doesn't save passwords or sensitive information
 - **Minimal permissions** - Only accesses email text for translation
@@ -180,10 +212,10 @@ Enable **"Auto-translate on open"** in the addon settings to automatically trans
 - `menus` - Adds context menu
 - `storage` - Saves settings
 - `tabs` - Injects script into email
-- **Host permissions** (only if using Google Translate or LibreTranslate):
+- **Host permissions**:
+  - `http://localhost/*`, `http://*/*`, `https://*/*` - For local Ollama and OpenAI Compatible API servers
   - `https://translate.google.com/*` - Google Translate API
   - `https://translate.fedilab.app/*` - LibreTranslate instance
-  - `http://localhost/*` - For local Ollama
 
 No access to:
 - ❌ Address book, calendar, chat
@@ -238,6 +270,13 @@ LibreTranslate uses free public instances. The addon automatically tries 3 insta
 **Note**: `moz-extension://*` allows only Firefox/Thunderbird extensions to access Ollama, blocking external websites (more secure).
 
 ## 📜 Changelog
+
+### v1.7.0
+- **OpenAI Compatible API support**: Connect to oMLX, vLLM, LocalAI, LM Studio, or any OpenAI-compatible server
+  - New service option "OpenAI Compatible API" in the context menu
+  - Configurable Base URL, Model Name, and optional API Key
+  - Supports servers running on `http://localhost:8000` (oMLX default) or any custom endpoint
+  - Uses OpenAI's `/v1/chat/completions` endpoint for maximum compatibility
 
 ### v1.6.0
 - **Keyboard shortcut** (`Alt+W` / `Option+W`): toggle translation on the current email; works only when an email is displayed in the preview pane or a separate window

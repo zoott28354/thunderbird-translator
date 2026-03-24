@@ -19,6 +19,7 @@ function translatePage() {
 const serviceSelect = document.getElementById("service");
 const targetLanguageSelect = document.getElementById("targetLanguage");
 const ollamaSection = document.getElementById("ollamaSection");
+const openaiCompatibleSection = document.getElementById("openaiCompatibleSection");
 const urlInput = document.getElementById("ollamaUrl");
 const modelSelect = document.getElementById("model");
 const refreshBtn = document.getElementById("refreshModels");
@@ -26,9 +27,11 @@ const testBtn = document.getElementById("testConnection");
 const saveBtn = document.getElementById("save");
 const statusDiv = document.getElementById("status");
 
-// Mostra/nascondi la sezione Ollama
+// 显示/隐藏 Ollama 和 OpenAI Compatible 配置区域
 serviceSelect.addEventListener("change", () => {
-  ollamaSection.style.display = serviceSelect.value === "ollama" ? "block" : "none";
+  const service = serviceSelect.value;
+  ollamaSection.style.display = service === "ollama" ? "block" : "none";
+  openaiCompatibleSection.style.display = service === "openai-compatible" ? "block" : "none";
 });
 
 function showStatus(messageKey, isError, replacements = {}) {
@@ -44,14 +47,20 @@ function clearStatus() {
 
 async function loadSettings() {
   const settings = await browser.runtime.sendMessage({ command: "getSettings" });
-  
+
   serviceSelect.value = settings.service || "ollama";
   targetLanguageSelect.value = settings.targetLanguage || "it";
   urlInput.value = settings.ollamaUrl || "http://localhost:11434";
   document.getElementById('autoTranslate').checked = settings.autoTranslate || false;
-  
-  // Mostra/nascondi la sezione Ollama
+
+  // OpenAI Compatible settings
+  document.getElementById('openAIBaseUrl').value = settings.openAIBaseUrl || "http://localhost:8000";
+  document.getElementById('openAIModel').value = settings.openAIModel || "";
+  document.getElementById('openAIApiKey').value = settings.openAIApiKey || "";
+
+  // 显示/隐藏配置区域
   ollamaSection.style.display = serviceSelect.value === "ollama" ? "block" : "none";
+  openaiCompatibleSection.style.display = serviceSelect.value === "openai-compatible" ? "block" : "none";
 
   // Carica modelli solo se Ollama
   if (serviceSelect.value === "ollama") {
@@ -143,6 +152,11 @@ saveBtn.addEventListener("click", async () => {
   const ollamaUrl = urlInput.value.trim();
   const model = modelSelect.value;
 
+  // OpenAI Compatible settings
+  const openAIBaseUrl = document.getElementById('openAIBaseUrl').value.trim();
+  const openAIModel = document.getElementById('openAIModel').value.trim();
+  const openAIApiKey = document.getElementById('openAIApiKey').value.trim();
+
   // Valida i campi Ollama solo se Ollama è selezionato
   if (service === "ollama") {
     if (!ollamaUrl) {
@@ -155,6 +169,18 @@ saveBtn.addEventListener("click", async () => {
     }
   }
 
+  // Valida i campi OpenAI Compatible solo se selezionato
+  if (service === "openai-compatible") {
+    if (!openAIBaseUrl) {
+      showStatus("openAIBaseUrlRequired", true);
+      return;
+    }
+    if (!openAIModel) {
+      showStatus("openAIModelRequired", true);
+      return;
+    }
+  }
+
   // Salva TUTTI i campi sempre, non solo quando Ollama è selezionato
   const settings = {
     service,
@@ -162,6 +188,9 @@ saveBtn.addEventListener("click", async () => {
     ollamaUrl,
     model,
     autoTranslate: document.getElementById('autoTranslate').checked,
+    openAIBaseUrl,
+    openAIModel,
+    openAIApiKey,
   };
 
   await browser.runtime.sendMessage({

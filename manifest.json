@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
   "name": "Thunderbird Translator",
-  "version": "1.6.0",
-  "description": "Translate emails using Ollama, Google Translate or LibreTranslate",
+  "version": "1.7.0",
+  "description": "Translate emails using Ollama, OpenAI Compatible API (oMLX, vLLM), Google Translate or LibreTranslate",
   "author": "zoott28354",
   "default_locale": "en",
 
@@ -21,6 +21,8 @@
     "tabs",
     "scripting",
     "http://localhost/*",
+    "http://*/*",
+    "https://*/*",
     "https://translate.google.com/*",
     "https://translate.fedilab.app/*",
     "https://libretranslate.com/*",
