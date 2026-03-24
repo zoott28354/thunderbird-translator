@@ -134,5 +134,65 @@
   "translationComplete": {
     "message": "Перевод завершён!",
     "description": "Сообщение при завершении перевода"
+  },
+  "quickTranslate": {
+    "message": "Перевести",
+    "description": "Подпись плавающей кнопки быстрого перевода"
+  },
+  "restoreOriginal": {
+    "message": "Восстановить оригинал",
+    "description": "Кнопка для восстановления исходного содержимого письма"
+  },
+  "autoTranslateLabel": {
+    "message": "Автоперевод при открытии",
+    "description": "Подпись переключателя автоперевода на странице настроек"
+  },
+  "shortcutHint": {
+    "message": "Нажмите Alt+W для быстрого перевода или восстановления. Вы можете настроить это сочетание клавиш в разделе «Управление горячими клавишами расширений» в Thunderbird.",
+    "description": "Подсказка с описанием сочетания клавиш"
+  },
+  "openaiCompatibleMenuTitle": {
+    "message": "Перевести через OpenAI Compatible API",
+    "description": "Заголовок контекстного меню для OpenAI Compatible API (oMLX, vLLM и др.)"
+  },
+  "openAIBaseUrl": {
+    "message": "Базовый URL",
+    "description": "Метка для базового URL OpenAI Compatible API"
+  },
+  "openAIBaseUrlHint": {
+    "message": "например, http://localhost:8000 для oMLX",
+    "description": "Подсказка для базового URL OpenAI Compatible API"
+  },
+  "openAIModel": {
+    "message": "Название модели",
+    "description": "Метка для названия модели OpenAI Compatible API"
+  },
+  "openAIModelPlaceholder": {
+    "message": "название-модели",
+    "description": "Заполнитель для названия модели OpenAI Compatible API"
+  },
+  "openAIModelHint": {
+    "message": "Введите точное название модели, как указано в вашем API-сервере",
+    "description": "Подсказка для названия модели OpenAI Compatible API"
+  },
+  "openAIApiKey": {
+    "message": "API-ключ (необязательно)",
+    "description": "Метка для API-ключа OpenAI Compatible API"
+  },
+  "openAIApiKeyPlaceholder": {
+    "message": "sk-...",
+    "description": "Заполнитель для API-ключа OpenAI Compatible API"
+  },
+  "openAIApiKeyHint": {
+    "message": "Требуется только если ваш сервер требует аутентификацию",
+    "description": "Подсказка для API-ключа OpenAI Compatible API"
+  },
+  "openAIBaseUrlRequired": {
+    "message": "Введите базовый URL",
+    "description": "Сообщение проверки для базового URL OpenAI Compatible API"
+  },
+  "openAIModelRequired": {
+    "message": "Введите название модели",
+    "description": "Сообщение проверки для модели OpenAI Compatible API"
   }
 }

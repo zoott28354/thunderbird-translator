@@ -5,6 +5,10 @@ const DEFAULT_MODEL = "translategemma";
 const DEFAULT_SERVICE = "ollama";
 const DEFAULT_TARGET_LANGUAGE = "it";
 
+// OpenAI Compatible API defaults (for oMLX, vLLM, LocalAI, LM Studio, etc.)
+const DEFAULT_OPENAI_BASE_URL = "http://localhost:8000";
+const DEFAULT_OPENAI_MODEL = "";
+
 const LANGUAGE_NAMES = {
   it: "italiano",
   en: "English",
@@ -47,6 +51,11 @@ async function getSettings() {
     ollamaTargetLang: DEFAULT_TARGET_LANGUAGE,
     googleTargetLang: "en",
     libreTargetLang: "en",
+    autoTranslate: false,
+    // OpenAI Compatible API settings (for oMLX, vLLM, LocalAI, LM Studio, etc.)
+    openAIBaseUrl: DEFAULT_OPENAI_BASE_URL,
+    openAIModel: DEFAULT_OPENAI_MODEL,
+    openAIApiKey: "",
   };
   const stored = await messenger.storage.local.get(defaults);
   return stored;
@@ -66,7 +75,7 @@ function createContextMenu() {
     menuPendingCount--;
     try {
       const settings = await getSettings();
-      const { ollamaTargetLang, googleTargetLang, libreTargetLang } = settings;
+      const { ollamaTargetLang, googleTargetLang, libreTargetLang, openaiCompatibleTargetLang } = settings;
 
       // Always remove all menus first to avoid ID conflicts
       await messenger.menus.removeAll();
@@ -88,6 +97,26 @@ function createContextMenu() {
         await messenger.menus.create({
           id: `ollama-${langCode}`,
           parentId: "translate-ollama-parent",
+          title: title,
+          contexts: ["page", "frame", "selection"],
+        });
+      }
+
+      // Create OpenAI Compatible menu with language submenus
+      await messenger.menus.create({
+        id: "translate-openai-compatible-parent",
+        title: messenger.i18n.getMessage("openaiCompatibleMenuTitle") || "Translate with OpenAI Compatible API",
+        contexts: ["page", "frame", "selection"],
+      });
+
+      for (const langCode of languages) {
+        const langName = LANGUAGE_NAMES[langCode];
+        const isSelected = langCode === (openaiCompatibleTargetLang || ollamaTargetLang);
+        const title = isSelected ? toBold(langName) : langName;
+
+        await messenger.menus.create({
+          id: `openai-compatible-${langCode}`,
+          parentId: "translate-openai-compatible-parent",
           title: title,
           contexts: ["page", "frame", "selection"],
         });
@@ -133,7 +162,7 @@ function createContextMenu() {
         });
       }
 
-      console.log(`[Translator] Menu created with 3 services, each with ${languages.length} language options`);
+      console.log(`[Translator] Menu created with 4 services, each with ${languages.length} language options`);
     } catch (e) {
       console.warn("[Translator] Error in createContextMenu:", e.message);
     }
@@ -153,7 +182,7 @@ messenger.runtime.onInstalled.addListener(() => {
 
 // --- Update context menu when settings change ---
 messenger.storage.onChanged.addListener((changes, area) => {
-  if (area === "local" && (changes.ollamaTargetLang || changes.googleTargetLang || changes.libreTargetLang)) {
+  if (area === "local" && (changes.ollamaTargetLang || changes.googleTargetLang || changes.libreTargetLang || changes.openaiCompatibleTargetLang)) {
     console.log("[Translator] Service language changed, updating menu");
     createContextMenu();
   }
@@ -348,6 +377,8 @@ messenger.runtime.onConnect.addListener((port) => {
           success: getMsg("translationComplete", "Translation complete!"),
           errorUnreachable: "Error: " + getMsg("translationError", "Translation error"),
           error: getMsg("translationError", "Translation error"),
+          quickTranslate: getMsg("quickTranslate", "Translate"),
+          restoreOriginal: getMsg("restoreOriginal", "Restore original"),
         }
       });
       return;
@@ -390,8 +421,57 @@ messenger.runtime.onConnect.addListener((port) => {
         });
       }
     }
+
+    if (message.command === "translationState") {
+      // Resolve any pending getTranslationState query for this tab
+      const resolve = translationStatePending.get(tabId);
+      if (resolve) {
+        translationStatePending.delete(tabId);
+        resolve(message.isTranslated === true);
+      }
+    }
   });
 });
+
+// --- OpenAI Compatible API (for oMLX, vLLM, LocalAI, LM Studio, etc.) ---
+
+async function translateWithOpenAICompatible(text, settings) {
+  const { openAIBaseUrl, openAIModel, openAIApiKey, targetLanguage } = settings;
+  const langName = LANGUAGE_NAMES[targetLanguage] || targetLanguage;
+
+  const url = `${openAIBaseUrl}/v1/chat/completions`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(openAIApiKey ? { "Authorization": `Bearer ${openAIApiKey}` } : {})
+    },
+    body: JSON.stringify({
+      model: openAIModel,
+      messages: [
+        {
+          role: "system",
+          content: `You are a translator. Translate the following text to ${langName}. Only output the translation, nothing else.`
+        },
+        {
+          role: "user",
+          content: text
+        }
+      ],
+      stream: false,
+      temperature: 0.3
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`OpenAI Compatible API error: ${response.status} ${response.statusText} - ${errorText.substring(0, 200)}`);
+  }
+
+  const data = await response.json();
+  return data.choices[0].message.content.trim();
+}
 
 // --- Ollama API ---
 
@@ -557,6 +637,9 @@ async function translateText(text, settings) {
       case "ollama":
         result = await translateWithOllama(text, settings);
         break;
+      case "openai-compatible":
+        result = await translateWithOpenAICompatible(text, settings);
+        break;
       case "google":
         result = await translateWithGoogle(text, targetLanguage);
         break;
@@ -588,6 +671,14 @@ async function getInstalledModels(ollamaUrl) {
 
 let toggleMenuCreated = false;
 
+// --- Quick-translate shortcut state ---
+
+// Map of tabId → resolve function, for pending translationState queries
+const translationStatePending = new Map();
+
+// Flag to prevent duplicate shortcut triggers while translation is in progress
+let isTranslating = false;
+
 // --- Event Handlers ---
 
 messenger.menus.onClicked.addListener(async (info, tab) => {
@@ -604,6 +695,9 @@ messenger.menus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId.startsWith("ollama-")) {
     service = "ollama";
     targetLang = info.menuItemId.replace("ollama-", "");
+  } else if (info.menuItemId.startsWith("openai-compatible-")) {
+    service = "openai-compatible";
+    targetLang = info.menuItemId.replace("openai-compatible-", "");
   } else if (info.menuItemId.startsWith("google-")) {
     service = "google";
     targetLang = info.menuItemId.replace("google-", "");
@@ -617,6 +711,7 @@ messenger.menus.onClicked.addListener(async (info, tab) => {
 
     // Save the selected language permanently for this service
     const storageKey = service === "ollama" ? "ollamaTargetLang" :
+                       service === "openai-compatible" ? "openaiCompatibleTargetLang" :
                        service === "google" ? "googleTargetLang" :
                        "libreTargetLang";
 
@@ -679,7 +774,15 @@ messenger.runtime.onMessage.addListener(async (message, sender) => {
       targetLanguage: targetLang,
       ollamaUrl: message.ollamaUrl,
       model: message.model,
+      autoTranslate: message.autoTranslate === true,
     };
+
+    // Update OpenAI Compatible settings
+    if (service === "openai-compatible") {
+      storageData.openAIBaseUrl = message.openAIBaseUrl;
+      storageData.openAIModel = message.openAIModel;
+      storageData.openAIApiKey = message.openAIApiKey || "";
+    }
 
     // Update the appropriate service-specific language
     if (service === "ollama") {
@@ -688,6 +791,8 @@ messenger.runtime.onMessage.addListener(async (message, sender) => {
       storageData.googleTargetLang = targetLang;
     } else if (service === "libretranslate") {
       storageData.libreTargetLang = targetLang;
+    } else if (service === "openai-compatible") {
+      storageData.openaiCompatibleTargetLang = targetLang;
     }
 
     await messenger.storage.local.set(storageData);
@@ -696,6 +801,101 @@ messenger.runtime.onMessage.addListener(async (message, sender) => {
     createContextMenu();
 
     return { success: true };
+  }
+});
+
+// --- Auto-translate: onMessageDisplayed listener ---
+
+messenger.messageDisplay.onMessageDisplayed.addListener(async (tab, message) => {
+  const settings = await getSettings();
+  if (!settings.autoTranslate) return;
+
+  const tabId = tab.id;
+  const targetLanguage = settings.targetLanguage;
+
+  // Poll for port readiness: interval 50ms, timeout 3000ms (60 attempts)
+  let waited = 0;
+  const interval = setInterval(() => {
+    waited += 50;
+    const port = portMap.get(tabId);
+    if (port) {
+      clearInterval(interval);
+      console.log("[Translator] Auto-translate: port ready, sending startTranslation to tab", tabId);
+      port.postMessage({ command: "startTranslation", targetLanguage });
+    } else if (waited >= 3000) {
+      clearInterval(interval);
+      console.error("[Translator] Auto-translate: port not ready after 3s timeout for tab", tabId);
+    }
+  }, 50);
+});
+
+// --- Keyboard shortcut: quick-translate command ---
+
+messenger.commands.onCommand.addListener(async (command) => {
+  if (command !== "quick-translate") return;
+
+  // Prevent duplicate triggers while translation is in progress
+  if (isTranslating) {
+    console.log("[Translator] Quick-translate shortcut ignored: translation already in progress");
+    return;
+  }
+
+  // Find the active messageDisplay tab
+  let tabs;
+  try {
+    tabs = await messenger.tabs.query({ type: "messageDisplay" });
+  } catch (e) {
+    console.warn("[Translator] commands.onCommand: tabs.query failed:", e.message);
+    return;
+  }
+
+  if (!tabs || tabs.length === 0) {
+    console.warn("[Translator] Quick-translate shortcut: no messageDisplay tab found");
+    return;
+  }
+
+  const tab = tabs[0];
+  const tabId = tab.id;
+  const port = portMap.get(tabId) || lastActivePort;
+
+  if (!port) {
+    console.warn("[Translator] Quick-translate shortcut: no port available for tab", tabId);
+    return;
+  }
+
+  // Set flag immediately to prevent re-entry from concurrent shortcut triggers
+  isTranslating = true;
+
+  try {
+    // Query translation state with 500ms timeout, default isTranslated=false
+    const isTranslated = await new Promise((resolve) => {
+      const timer = setTimeout(() => {
+        translationStatePending.delete(tabId);
+        console.warn("[Translator] getTranslationState timed out, defaulting to isTranslated=false");
+        resolve(false);
+      }, 500);
+
+      translationStatePending.set(tabId, (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      });
+
+      port.postMessage({ command: "getTranslationState" });
+    });
+
+    const settings = await getSettings();
+    if (isTranslated) {
+      console.log("[Translator] Quick-translate: sending reloadOriginal to tab", tabId);
+      port.postMessage({ command: "reloadOriginal" });
+    } else {
+      console.log("[Translator] Quick-translate: sending startTranslation to tab", tabId);
+      port.postMessage({ command: "startTranslation", targetLanguage: settings.targetLanguage });
+    }
+  } finally {
+    // Reset flag after a short delay to allow the command to be processed
+    setTimeout(() => {
+      isTranslating = false;
+    }, 500);
   }
 });
 

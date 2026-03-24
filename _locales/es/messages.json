@@ -134,5 +134,65 @@
   "translationComplete": {
     "message": "¡Traducción completa!",
     "description": "Mensaje mostrado cuando se completa la traducción"
+  },
+  "quickTranslate": {
+    "message": "Traducir",
+    "description": "Etiqueta del botón flotante de traducción rápida"
+  },
+  "restoreOriginal": {
+    "message": "Restaurar original",
+    "description": "Botón para restaurar el contenido original del correo"
+  },
+  "autoTranslateLabel": {
+    "message": "Traducción automática al abrir",
+    "description": "Etiqueta para el interruptor de traducción automática en la página de opciones"
+  },
+  "shortcutHint": {
+    "message": "Presiona Alt+W para traducir o restaurar rápidamente. Puedes personalizar este atajo en Gestionar atajos de extensiones de Thunderbird.",
+    "description": "Texto de sugerencia que explica el atajo de teclado"
+  },
+  "openaiCompatibleMenuTitle": {
+    "message": "Traducir con API Compatible con OpenAI",
+    "description": "Título del menú contextual para API Compatible con OpenAI (oMLX, vLLM, etc.)"
+  },
+  "openAIBaseUrl": {
+    "message": "URL Base",
+    "description": "Etiqueta para la URL base de la API Compatible con OpenAI"
+  },
+  "openAIBaseUrlHint": {
+    "message": "ej. http://localhost:8000 para oMLX",
+    "description": "Sugerencia para la URL base de la API Compatible con OpenAI"
+  },
+  "openAIModel": {
+    "message": "Nombre del Modelo",
+    "description": "Etiqueta para el nombre del modelo de la API Compatible con OpenAI"
+  },
+  "openAIModelPlaceholder": {
+    "message": "nombre-del-modelo",
+    "description": "Marcador de posición para el nombre del modelo de la API Compatible con OpenAI"
+  },
+  "openAIModelHint": {
+    "message": "Ingrese el nombre exacto del modelo como se muestra en su servidor API",
+    "description": "Sugerencia para el nombre del modelo de la API Compatible con OpenAI"
+  },
+  "openAIApiKey": {
+    "message": "Clave API (opcional)",
+    "description": "Etiqueta para la clave API de la API Compatible con OpenAI"
+  },
+  "openAIApiKeyPlaceholder": {
+    "message": "sk-...",
+    "description": "Marcador de posición para la clave API de la API Compatible con OpenAI"
+  },
+  "openAIApiKeyHint": {
+    "message": "Solo requerido si su servidor requiere autenticación",
+    "description": "Sugerencia para la clave API de la API Compatible con OpenAI"
+  },
+  "openAIBaseUrlRequired": {
+    "message": "Ingrese la URL base",
+    "description": "Mensaje de validación para la URL base de la API Compatible con OpenAI"
+  },
+  "openAIModelRequired": {
+    "message": "Ingrese el nombre del modelo",
+    "description": "Mensaje de validación para el modelo de la API Compatible con OpenAI"
   }
 }

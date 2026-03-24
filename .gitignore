@@ -12,6 +12,8 @@ test_translation.js
 # IDE
 .vscode/
 .idea/
+.kiro/
+*.swp
 *.swp
 *.swo
 *~
