@@ -100,6 +100,7 @@
     <label for="service" data-i18n="translationService"></label>
     <select id="service">
       <option value="ollama">Ollama (locale)</option>
+      <option value="openai-compatible">OpenAI Compatible API (oMLX, vLLM, etc.)</option>
       <option value="google">Google Translate</option>
       <option value="libretranslate">LibreTranslate</option>
     </select>
@@ -141,6 +142,27 @@
 
     <div class="button-row">
       <button id="testConnection" data-i18n="testConnection">Test Connection</button>
+    </div>
+  </div>
+
+  <!-- OpenAI Compatible API Configuration (show only if OpenAI Compatible is selected) -->
+  <div id="openaiCompatibleSection" style="display: none;">
+    <div class="field">
+      <label for="openAIBaseUrl" data-i18n="openAIBaseUrl"></label>
+      <input type="text" id="openAIBaseUrl" placeholder="http://localhost:8000">
+      <p class="hint" data-i18n="openAIBaseUrlHint"></p>
+    </div>
+
+    <div class="field">
+      <label for="openAIModel" data-i18n="openAIModel"></label>
+      <input type="text" id="openAIModel" placeholder="Qwen3-Coder-Next-8bit" data-i18n-placeholder="openAIModelPlaceholder">
+      <p class="hint" data-i18n="openAIModelHint"></p>
+    </div>
+
+    <div class="field">
+      <label for="openAIApiKey" data-i18n="openAIApiKey"></label>
+      <input type="text" id="openAIApiKey" placeholder="" data-i18n-placeholder="openAIApiKeyPlaceholder">
+      <p class="hint" data-i18n="openAIApiKeyHint"></p>
     </div>
   </div>
 

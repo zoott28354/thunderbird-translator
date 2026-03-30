@@ -5,6 +5,10 @@ const DEFAULT_MODEL = "translategemma";
 const DEFAULT_SERVICE = "ollama";
 const DEFAULT_TARGET_LANGUAGE = "it";
 
+// OpenAI Compatible API defaults (for oMLX, vLLM, LocalAI, LM Studio, etc.)
+const DEFAULT_OPENAI_BASE_URL = "http://localhost:8000";
+const DEFAULT_OPENAI_MODEL = "";
+
 const LANGUAGE_NAMES = {
   it: "italiano",
   en: "English",
@@ -47,6 +51,10 @@ async function getSettings() {
     ollamaTargetLang: DEFAULT_TARGET_LANGUAGE,
     googleTargetLang: "en",
     libreTargetLang: "en",
+    // OpenAI Compatible API settings (for oMLX, vLLM, LocalAI, LM Studio, etc.)
+    openAIBaseUrl: DEFAULT_OPENAI_BASE_URL,
+    openAIModel: DEFAULT_OPENAI_MODEL,
+    openAIApiKey: "",
   };
   const stored = await messenger.storage.local.get(defaults);
   return stored;
@@ -66,7 +74,7 @@ function createContextMenu() {
     menuPendingCount--;
     try {
       const settings = await getSettings();
-      const { ollamaTargetLang, googleTargetLang, libreTargetLang } = settings;
+      const { ollamaTargetLang, googleTargetLang, libreTargetLang, openaiCompatibleTargetLang } = settings;
 
       // Always remove all menus first to avoid ID conflicts
       await messenger.menus.removeAll();
@@ -88,6 +96,26 @@ function createContextMenu() {
         await messenger.menus.create({
           id: `ollama-${langCode}`,
           parentId: "translate-ollama-parent",
+          title: title,
+          contexts: ["page", "frame", "selection"],
+        });
+      }
+
+      // Create OpenAI Compatible menu with language submenus
+      await messenger.menus.create({
+        id: "translate-openai-compatible-parent",
+        title: messenger.i18n.getMessage("openaiCompatibleMenuTitle") || "Translate with OpenAI Compatible API",
+        contexts: ["page", "frame", "selection"],
+      });
+
+      for (const langCode of languages) {
+        const langName = LANGUAGE_NAMES[langCode];
+        const isSelected = langCode === (openaiCompatibleTargetLang || ollamaTargetLang);
+        const title = isSelected ? toBold(langName) : langName;
+
+        await messenger.menus.create({
+          id: `openai-compatible-${langCode}`,
+          parentId: "translate-openai-compatible-parent",
           title: title,
           contexts: ["page", "frame", "selection"],
         });
@@ -133,7 +161,7 @@ function createContextMenu() {
         });
       }
 
-      console.log(`[Translator] Menu created with 3 services, each with ${languages.length} language options`);
+      console.log(`[Translator] Menu created with 4 services, each with ${languages.length} language options`);
     } catch (e) {
       console.warn("[Translator] Error in createContextMenu:", e.message);
     }
@@ -153,7 +181,7 @@ messenger.runtime.onInstalled.addListener(() => {
 
 // --- Update context menu when settings change ---
 messenger.storage.onChanged.addListener((changes, area) => {
-  if (area === "local" && (changes.ollamaTargetLang || changes.googleTargetLang || changes.libreTargetLang)) {
+  if (area === "local" && (changes.ollamaTargetLang || changes.googleTargetLang || changes.libreTargetLang || changes.openaiCompatibleTargetLang)) {
     console.log("[Translator] Service language changed, updating menu");
     createContextMenu();
   }
@@ -393,6 +421,46 @@ messenger.runtime.onConnect.addListener((port) => {
   });
 });
 
+// --- OpenAI Compatible API (for oMLX, vLLM, LocalAI, LM Studio, etc.) ---
+
+async function translateWithOpenAICompatible(text, settings) {
+  const { openAIBaseUrl, openAIModel, openAIApiKey, targetLanguage } = settings;
+  const langName = LANGUAGE_NAMES[targetLanguage] || targetLanguage;
+
+  const url = `${openAIBaseUrl}/v1/chat/completions`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(openAIApiKey ? { "Authorization": `Bearer ${openAIApiKey}` } : {})
+    },
+    body: JSON.stringify({
+      model: openAIModel,
+      messages: [
+        {
+          role: "system",
+          content: `You are a translator. Translate the following text to ${langName}. Only output the translation, nothing else.`
+        },
+        {
+          role: "user",
+          content: text
+        }
+      ],
+      stream: false,
+      temperature: 0.3
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`OpenAI Compatible API error: ${response.status} ${response.statusText} - ${errorText.substring(0, 200)}`);
+  }
+
+  const data = await response.json();
+  return data.choices[0].message.content.trim();
+}
+
 // --- Ollama API ---
 
 async function translateWithOllama(text, settings) {
@@ -557,6 +625,9 @@ async function translateText(text, settings) {
       case "ollama":
         result = await translateWithOllama(text, settings);
         break;
+      case "openai-compatible":
+        result = await translateWithOpenAICompatible(text, settings);
+        break;
       case "google":
         result = await translateWithGoogle(text, targetLanguage);
         break;
@@ -604,6 +675,9 @@ messenger.menus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId.startsWith("ollama-")) {
     service = "ollama";
     targetLang = info.menuItemId.replace("ollama-", "");
+  } else if (info.menuItemId.startsWith("openai-compatible-")) {
+    service = "openai-compatible";
+    targetLang = info.menuItemId.replace("openai-compatible-", "");
   } else if (info.menuItemId.startsWith("google-")) {
     service = "google";
     targetLang = info.menuItemId.replace("google-", "");
@@ -617,6 +691,7 @@ messenger.menus.onClicked.addListener(async (info, tab) => {
 
     // Save the selected language permanently for this service
     const storageKey = service === "ollama" ? "ollamaTargetLang" :
+                       service === "openai-compatible" ? "openaiCompatibleTargetLang" :
                        service === "google" ? "googleTargetLang" :
                        "libreTargetLang";
 
@@ -681,6 +756,13 @@ messenger.runtime.onMessage.addListener(async (message, sender) => {
       model: message.model,
     };
 
+    // Update OpenAI Compatible settings
+    if (service === "openai-compatible") {
+      storageData.openAIBaseUrl = message.openAIBaseUrl;
+      storageData.openAIModel = message.openAIModel;
+      storageData.openAIApiKey = message.openAIApiKey || "";
+    }
+
     // Update the appropriate service-specific language
     if (service === "ollama") {
       storageData.ollamaTargetLang = targetLang;
@@ -688,6 +770,8 @@ messenger.runtime.onMessage.addListener(async (message, sender) => {
       storageData.googleTargetLang = targetLang;
     } else if (service === "libretranslate") {
       storageData.libreTargetLang = targetLang;
+    } else if (service === "openai-compatible") {
+      storageData.openaiCompatibleTargetLang = targetLang;
     }
 
     await messenger.storage.local.set(storageData);
