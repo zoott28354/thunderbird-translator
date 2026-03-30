@@ -1,5 +1,5 @@
 # Thunderbird Translator
-**(Local Ollama · Google Translate · LibreTranslate)**
+**(Local Ollama · OpenAI Compatible API (oMLX, vLLM) · Google Translate · LibreTranslate)**
 
 <p align="center">
   <img src="preview.png" alt="Thunderbird Translator Preview" width="600">
@@ -13,7 +13,8 @@ A Thunderbird addon that replaces the email body with its translation (in-place)
 
 - 🏠 **Local translation** - With Ollama: no data sent online, everything stays on your PC
 - 🤖 **Supports all Ollama models** - Translategemma, Llama, Mistral, Neural Chat, etc.
-- 🌐 **Multiple translation services** - Ollama, Google Translate, LibreTranslate
+- 🔌 **OpenAI Compatible API** - Connect to oMLX, vLLM, LocalAI, LM Studio, or any OpenAI-compatible server
+- 🌐 **Multiple translation services** - Ollama, OpenAI Compatible API, Google Translate, LibreTranslate
 - 🌍 **Multi-language translation** - Supports 10 languages: Italian, English, Spanish, French, German, Portuguese, Russian, Japanese, Chinese, Korean
 - 🖱️ **Simple interface** - Right-click on email and choose service and language
 - 💾 **Persistent settings** - Your configurations are saved automatically
@@ -33,6 +34,21 @@ A Thunderbird addon that replaces the email body with its translation (in-place)
 3. **Thunderbird** 128 or later (ESR and non-ESR)
 
 ⚠️ **Important note**: Before using Ollama, you'll need to configure `OLLAMA_ORIGINS` (see "Initial Configuration" section below).
+
+### For OpenAI Compatible API (oMLX, vLLM, LocalAI, LM Studio)
+
+1. **An OpenAI-compatible server** running locally or remotely
+   - oMLX: https://github.com/jundot/omlx (macOS, Apple Silicon)
+   - vLLM: https://github.com/vllm-project/vllm
+   - LocalAI: https://github.com/mudler/LocalAI
+   - LM Studio: https://lmstudio.ai
+
+2. **Model downloaded** in your server
+   - Example for oMLX: Download any MLX model from HuggingFace
+
+3. **Server URL** (e.g., `http://localhost:8000` for oMLX)
+
+4. **API Key** (optional, only if your server requires authentication)
 
 ### For Google Translate or LibreTranslate (online, free)
 
@@ -67,10 +83,12 @@ A Thunderbird addon that replaces the email body with its translation (in-place)
    - Menu > Tools > Add-ons > "Thunderbird Translator" > Preferences
 
 ### 2. Choose service and language
-   - **Service**: Ollama (local) / Google Translate / LibreTranslate
+   - **Service**: Ollama (local) / OpenAI Compatible API (oMLX, vLLM, etc.) / Google Translate / LibreTranslate
    - **Language**: Italian, English, Spanish, French, German, Portuguese, Russian, Japanese, Chinese, Korean
 
-### 3. If using Ollama: REQUIRED Configuration
+### 3. Configure your selected service
+
+#### If using Ollama: REQUIRED Configuration
 
 #### ⚠️ Configure OLLAMA_ORIGINS
 
@@ -118,7 +136,24 @@ OLLAMA_ORIGINS=moz-extension://*,http://localhost:11434
    - **Test connection**: Click to verify that Ollama is reachable
    - **Model**: Select `translategemma` (recommended) or another installed model
 
-#### 5. Save
+#### If using OpenAI Compatible API (oMLX, vLLM, LocalAI, etc.)
+
+1. **Base URL**: Enter your server's base URL
+   - oMLX default: `http://localhost:8000`
+   - vLLM default: `http://localhost:8000`
+   - LocalAI default: `http://localhost:8080`
+
+2. **Model Name**: Enter the exact model name as shown in your server
+   - For oMLX: Any downloaded MLX model (e.g., `Qwen3-Coder-Next-8bit`)
+   - For vLLM: Any supported model (e.g., `Qwen/Qwen2.5-7B-Instruct`)
+
+3. **API Key** (optional): Only required if your server requires authentication
+   - oMLX: Set via `--api-key` flag when starting server
+   - Leave empty if no authentication is required
+
+4. **Test connection**: Click "Test Connection" to verify that your server is reachable
+
+#### 4. Save
    - Click "Save"
 
 ## 🎯 How to Use
@@ -128,6 +163,7 @@ OLLAMA_ORIGINS=moz-extension://*,http://localhost:11434
 2. **Right-click** on the email body
 3. **Choose the translation service**:
    - **"Translate with Ollama"** → Local and private translation (requires Ollama installed)
+   - **"Translate with OpenAI Compatible API"** → Connect to oMLX, vLLM, LocalAI, LM Studio, etc.
    - **"Translate with Google Translate"** → Free online translation
    - **"Translate with LibreTranslate"** → Open-source online translation
 4. **Select the target language** from the submenu

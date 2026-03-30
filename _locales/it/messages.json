@@ -123,6 +123,10 @@
     "message": "Traduci con Ollama",
     "description": "Titolo menu contestuale"
   },
+  "openaiCompatibleMenuTitle": {
+    "message": "Traduci con API OpenAI Compatible",
+    "description": "Titolo menu contestuale per API OpenAI Compatible (oMLX, vLLM, ecc.)"
+  },
   "googleTranslateMenuTitle": {
     "message": "Traduci con Google Translate",
     "description": "Titolo menu contestuale per Google Translate"
@@ -134,5 +138,45 @@
   "translationComplete": {
     "message": "Traduzione completata!",
     "description": "Messaggio mostrato quando la traduzione è completata"
+  },
+  "openAIBaseUrl": {
+    "message": "URL Base",
+    "description": "Label per l'URL base dell'API OpenAI Compatible"
+  },
+  "openAIBaseUrlHint": {
+    "message": "es. http://localhost:8000 per oMLX",
+    "description": "Suggerimento per l'URL base dell'API OpenAI Compatible"
+  },
+  "openAIModel": {
+    "message": "Nome Modello",
+    "description": "Label per il nome del modello dell'API OpenAI Compatible"
+  },
+  "openAIModelPlaceholder": {
+    "message": "nome-modello",
+    "description": "Placeholder per il nome del modello dell'API OpenAI Compatible"
+  },
+  "openAIModelHint": {
+    "message": "Inserisci il nome esatto del modello come mostrato nel tuo server API",
+    "description": "Suggerimento per il nome del modello dell'API OpenAI Compatible"
+  },
+  "openAIApiKey": {
+    "message": "Chiave API (opzionale)",
+    "description": "Label per la chiave API dell'API OpenAI Compatible"
+  },
+  "openAIApiKeyPlaceholder": {
+    "message": "sk-...",
+    "description": "Placeholder per la chiave API dell'API OpenAI Compatible"
+  },
+  "openAIApiKeyHint": {
+    "message": "Richiesto solo se il tuo server richiede autenticazione",
+    "description": "Suggerimento per la chiave API dell'API OpenAI Compatible"
+  },
+  "openAIBaseUrlRequired": {
+    "message": "Inserisci l'URL base",
+    "description": "Messaggio di validazione per l'URL base dell'API OpenAI Compatible"
+  },
+  "openAIModelRequired": {
+    "message": "Inserisci il nome del modello",
+    "description": "Messaggio di validazione per il modello dell'API OpenAI Compatible"
   }
 }
