@@ -22,11 +22,14 @@
   const nodeMap = new Map();
 
   let toolbarEl = null;
-  let toolbarLabel = null;
+  let toolbarSelect = null;
   let toolbarBtn = null;
   let toolbarStatus = null;
+  let toolbarSubjectEl = null;
   let isTranslated = false;
   let translationCached = false;
+  let originalSubject = null;
+  let translatedSubjectText = null;
 
   const SERVICE_NAMES = {
     ollama: "Ollama",
@@ -60,6 +63,11 @@
       return;
     }
 
+    if (message.command === "subject") {
+      originalSubject = message.subject || null;
+      return;
+    }
+
     if (message.id != null && pendingRequests.has(message.id)) {
       console.log(`[Translator Content Script] Processing translation response for id ${message.id}`);
       const { resolve, reject } = pendingRequests.get(message.id);
@@ -88,6 +96,7 @@
   });
 
   port.postMessage({ command: "getMessages" });
+  port.postMessage({ command: "getSubject" });
 
   function sendTranslateRequest(text) {
     return new Promise((resolve, reject) => {
@@ -119,6 +128,7 @@
       "right": "0",
       "z-index": "2147483647",
       "display": "flex",
+      "flex-wrap": "wrap",
       "align-items": "center",
       "box-sizing": "border-box",
       "padding": "5px 0",
@@ -128,14 +138,30 @@
       "line-height": "1",
     });
 
-    toolbarLabel = document.createElement("span");
-    toolbarLabel.id = "translator-toolbar-label";
-    applyInlineLayout(toolbarLabel, {
+    toolbarSelect = document.createElement("select");
+    toolbarSelect.id = "translator-toolbar-select";
+    for (const [value, label] of Object.entries(SERVICE_NAMES)) {
+      const opt = document.createElement("option");
+      opt.value = value;
+      opt.textContent = label;
+      toolbarSelect.appendChild(opt);
+    }
+    applyInlineLayout(toolbarSelect, {
       "margin-left": "12px",
-      "padding": "2px 7px",
+      "padding": "2px 6px",
       "border-radius": "3px",
       "font-size": "11px",
-      "white-space": "nowrap",
+      "cursor": "pointer",
+    });
+    toolbarSelect.addEventListener("change", () => {
+      const newService = toolbarSelect.value;
+      browser.storage.local.set({ service: newService });
+      if (isTranslated) {
+        reloadPage();
+        nodeMap.clear();
+        translationCached = false;
+        translatedSubjectText = null;
+      }
     });
 
     toolbarBtn = document.createElement("button");
@@ -165,9 +191,23 @@
       "font-size": "12px",
     });
 
-    toolbarEl.appendChild(toolbarLabel);
+    toolbarEl.appendChild(toolbarSelect);
     toolbarEl.appendChild(toolbarBtn);
     toolbarEl.appendChild(toolbarStatus);
+
+    toolbarSubjectEl = document.createElement("div");
+    toolbarSubjectEl.id = "translator-toolbar-subject";
+    applyInlineLayout(toolbarSubjectEl, {
+      "display": "none",
+      "flex-basis": "100%",
+      "padding": "4px 12px 4px",
+      "font-size": "13px",
+      "font-weight": "bold",
+      "white-space": "nowrap",
+      "overflow": "hidden",
+      "text-overflow": "ellipsis",
+    });
+    toolbarEl.appendChild(toolbarSubjectEl);
 
     if (document.body) {
       document.body.insertBefore(toolbarEl, document.body.firstChild);
@@ -178,18 +218,39 @@
       });
     }
 
-    updateToolbarLabel();
+    updateToolbarSelect();
   }
 
-  function updateToolbarLabel() {
-    if (!toolbarLabel) return;
+  function updateBodyPadding() {
+    if (!toolbarEl || !document.body) return;
+    requestAnimationFrame(() => {
+      const height = toolbarEl.getBoundingClientRect().height || 32;
+      document.body.style.setProperty("padding-top", (height + 8) + "px", "important");
+    });
+  }
+
+  function showSubjectRow(text) {
+    if (!toolbarSubjectEl) return;
+    toolbarSubjectEl.textContent = (messages.subjectLabel || "Subject:") + " " + text;
+    toolbarSubjectEl.style.setProperty("display", "block", "important");
+    updateBodyPadding();
+  }
+
+  function hideSubjectRow() {
+    if (!toolbarSubjectEl) return;
+    toolbarSubjectEl.style.setProperty("display", "none", "important");
+    updateBodyPadding();
+  }
+
+  function updateToolbarSelect() {
+    if (!toolbarSelect) return;
     browser.storage.local.get({ service: "ollama" }).then(({ service }) => {
-      toolbarLabel.textContent = SERVICE_NAMES[service] || service;
+      toolbarSelect.value = service;
     });
   }
 
   browser.storage.onChanged.addListener((changes, area) => {
-    if (area === "local" && changes.service) updateToolbarLabel();
+    if (area === "local" && changes.service) updateToolbarSelect();
   });
 
   function setToolbarStatus(text, type = "") {
@@ -351,6 +412,7 @@
       isTranslated = true;
       setToolbarButton("Show Original");
       setToolbarStatus(messages.success, "success");
+      if (translatedSubjectText) showSubjectRow(translatedSubjectText);
       return;
     }
 
@@ -380,6 +442,19 @@
       setToolbarButton("Show Original");
       setToolbarStatus(messages.success, "success");
       console.log("[Translator] Translation complete");
+
+      if (originalSubject) {
+        if (translatedSubjectText) {
+          showSubjectRow(translatedSubjectText);
+        } else {
+          try {
+            translatedSubjectText = await sendTranslateRequest(originalSubject);
+            showSubjectRow(translatedSubjectText);
+          } catch (e) {
+            console.warn("[Translator] Subject translation failed:", e.message);
+          }
+        }
+      }
     } catch (e) {
       console.error("[Translator] Translation failed:", e);
       const msg = (e.message.includes("Failed to fetch") || e.message.includes("NetworkError"))
@@ -415,6 +490,7 @@
     isTranslated = false;
     setToolbarButton("Translate");
     setToolbarStatus("", "");
+    hideSubjectRow();
     console.log(`[Translator] Restored ${restored} nodes, ${detached} detached`);
   }
 

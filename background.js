@@ -330,6 +330,17 @@ messenger.runtime.onConnect.addListener((port) => {
   // Handle messages from content script through the port
   port.onMessage.addListener(async (message) => {
 
+    if (message.command === "getSubject") {
+      try {
+        const msg = await messenger.messageDisplay.getDisplayedMessage(tabId);
+        port.postMessage({ command: "subject", subject: msg?.subject || "" });
+      } catch (e) {
+        console.warn("[Translator] getSubject failed:", e.message);
+        port.postMessage({ command: "subject", subject: "" });
+      }
+      return;
+    }
+
     if (message.command === "getMessages") {
       // Send localized messages to content script
       const getMsg = (key, fallback) => {
@@ -348,6 +359,7 @@ messenger.runtime.onConnect.addListener((port) => {
           success: getMsg("translationComplete", "Translation complete!"),
           errorUnreachable: "Error: " + getMsg("translationError", "Translation error"),
           error: getMsg("translationError", "Translation error"),
+          subjectLabel: getMsg("subjectLabel", "Subject:"),
         }
       });
       return;

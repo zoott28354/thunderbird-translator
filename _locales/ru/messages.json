@@ -134,5 +134,9 @@
   "translationComplete": {
     "message": "Перевод завершён!",
     "description": "Сообщение при завершении перевода"
+  },
+  "subjectLabel": {
+    "message": "Тема:",
+    "description": "Метка перед переведённой темой письма"
   }
 }
