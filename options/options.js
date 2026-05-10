@@ -142,7 +142,6 @@ saveBtn.addEventListener("click", async () => {
   const ollamaUrl = urlInput.value.trim();
   const model = modelSelect.value;
 
-  // Valida i campi Ollama solo se Ollama è selezionato
   if (service === "ollama") {
     if (!ollamaUrl) {
       showStatus("urlRequired", true);

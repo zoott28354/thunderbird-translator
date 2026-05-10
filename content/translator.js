@@ -1,7 +1,6 @@
 "use strict";
 
 (() => {
-  // Avoid double-injection
   if (window.__ollamaTranslatorLoaded) return;
   window.__ollamaTranslatorLoaded = true;
 
@@ -20,19 +19,27 @@
 
   const MIN_TEXT_LENGTH = 3;
 
-  // Storage for original/translated text per node
-  const nodeMap = new Map(); // textNode -> { original, translated }
+  const nodeMap = new Map();
 
-  let toastEl = null;
-  let toastTimeout = null;
+  let toolbarEl = null;
+  let toolbarLabel = null;
+  let toolbarBtn = null;
+  let toolbarStatus = null;
+  let isTranslated = false;
+  let translationCached = false;
 
-  // Translation messages - will be loaded from background
+  const SERVICE_NAMES = {
+    ollama: "Ollama",
+    google: "Google Translate",
+    libretranslate: "LibreTranslate",
+  };
+
   let messages = {
-    "noText": "No text to translate",
-    "translating": "Translating...",
-    "success": "Translation complete!",
-    "errorUnreachable": "Error: Server unreachable",
-    "error": "Translation error"
+    noText: "No text to translate",
+    translating: "Translating...",
+    success: "Done",
+    errorUnreachable: "Error: Server unreachable",
+    error: "Translation error",
   };
 
   // --- Port to background ---
@@ -40,33 +47,26 @@
   const port = browser.runtime.connect({ name: "translator" });
   console.log("[Translator Content Script] Connecting to background...");
 
-  // Pending translation requests: id -> { resolve, reject }
   const pendingRequests = new Map();
   let nextRequestId = 0;
-
-  // Current target language (set by menu selection)
   let targetLanguage = null;
 
   port.onMessage.addListener((message) => {
     console.log("[Translator Content Script] Received message:", message.command || `id:${message.id}`, message);
 
-    // Response with translation messages
     if (message.command === "messages") {
       messages = message.data;
       console.log("[Translator Content Script] Messages loaded");
       return;
     }
 
-    // Response to a translate request
     if (message.id != null && pendingRequests.has(message.id)) {
       console.log(`[Translator Content Script] Processing translation response for id ${message.id}`);
       const { resolve, reject } = pendingRequests.get(message.id);
       pendingRequests.delete(message.id);
       if (message.success) {
-        console.log(`[Translator Content Script] Translation successful, length: ${message.translated?.length || 0}`);
         resolve(message.translated);
       } else {
-        console.log(`[Translator Content Script] Translation failed:`, message.error);
         reject(new Error(message.error));
       }
       return;
@@ -74,10 +74,8 @@
       console.warn(`[Translator Content Script] Received response for unknown request id: ${message.id}`);
     }
 
-    // Commands from background
     if (message.command === "startTranslation") {
       console.log("[Translator Content Script] Starting translation...");
-      // Save target language if provided
       if (message.targetLanguage) {
         targetLanguage = message.targetLanguage;
         console.log(`[Translator Content Script] Target language set to: ${targetLanguage}`);
@@ -89,52 +87,121 @@
     }
   });
 
-  // Request translation messages from background
   port.postMessage({ command: "getMessages" });
 
   function sendTranslateRequest(text) {
     return new Promise((resolve, reject) => {
       const id = nextRequestId++;
       pendingRequests.set(id, { resolve, reject });
-
-      // Include targetLanguage if set
       const message = { command: "translate", id, text };
-      if (targetLanguage) {
-        message.targetLanguage = targetLanguage;
-      }
-
+      if (targetLanguage) message.targetLanguage = targetLanguage;
       port.postMessage(message);
     });
   }
 
-  // --- Toast Overlay ---
+  // --- Toolbar ---
 
-  function createToast() {
-    if (toastEl) return toastEl;
-    toastEl = document.createElement("div");
-    toastEl.id = "ollama-translator-toast";
-    toastEl.className = "ollama-toast";
-    document.body.appendChild(toastEl);
-    return toastEl;
+  function applyInlineLayout(el, styles) {
+    for (const [prop, val] of Object.entries(styles)) {
+      el.style.setProperty(prop, val, "important");
+    }
   }
 
-  function showToast(text, autoHide = false) {
-    const toast = createToast();
-    toast.textContent = text;
-    toast.classList.add("ollama-toast-visible");
-    toast.classList.remove("ollama-toast-hidden");
+  function ensureToolbar() {
+    if (toolbarEl) return;
 
-    if (toastTimeout) {
-      clearTimeout(toastTimeout);
-      toastTimeout = null;
+    toolbarEl = document.createElement("div");
+    toolbarEl.id = "translator-toolbar";
+    applyInlineLayout(toolbarEl, {
+      "position": "fixed",
+      "top": "0",
+      "left": "0",
+      "right": "0",
+      "z-index": "2147483647",
+      "display": "flex",
+      "align-items": "center",
+      "box-sizing": "border-box",
+      "padding": "5px 0",
+      "margin": "0",
+      "font-family": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      "font-size": "13px",
+      "line-height": "1",
+    });
+
+    toolbarLabel = document.createElement("span");
+    toolbarLabel.id = "translator-toolbar-label";
+    applyInlineLayout(toolbarLabel, {
+      "margin-left": "12px",
+      "padding": "2px 7px",
+      "border-radius": "3px",
+      "font-size": "11px",
+      "white-space": "nowrap",
+    });
+
+    toolbarBtn = document.createElement("button");
+    toolbarBtn.id = "translator-toolbar-btn";
+    toolbarBtn.textContent = "Translate";
+    applyInlineLayout(toolbarBtn, {
+      "margin-left": "16px",
+      "padding": "4px 12px",
+      "border": "1px solid",
+      "border-radius": "4px",
+      "font-size": "12px",
+      "white-space": "nowrap",
+      "cursor": "pointer",
+    });
+    toolbarBtn.addEventListener("click", () => {
+      if (isTranslated) {
+        reloadPage();
+      } else {
+        startTranslation();
+      }
+    });
+
+    toolbarStatus = document.createElement("span");
+    toolbarStatus.id = "translator-toolbar-status";
+    applyInlineLayout(toolbarStatus, {
+      "margin-left": "16px",
+      "font-size": "12px",
+    });
+
+    toolbarEl.appendChild(toolbarLabel);
+    toolbarEl.appendChild(toolbarBtn);
+    toolbarEl.appendChild(toolbarStatus);
+
+    if (document.body) {
+      document.body.insertBefore(toolbarEl, document.body.firstChild);
+      requestAnimationFrame(() => {
+        const height = toolbarEl.getBoundingClientRect().height || 32;
+        document.body.style.setProperty("padding-top", (height + 8) + "px", "important");
+        document.body.style.setProperty("margin-top", "0", "important");
+      });
     }
 
-    if (autoHide) {
-      toastTimeout = setTimeout(() => {
-        toast.classList.remove("ollama-toast-visible");
-        toast.classList.add("ollama-toast-hidden");
-      }, 2000);
-    }
+    updateToolbarLabel();
+  }
+
+  function updateToolbarLabel() {
+    if (!toolbarLabel) return;
+    browser.storage.local.get({ service: "ollama" }).then(({ service }) => {
+      toolbarLabel.textContent = SERVICE_NAMES[service] || service;
+    });
+  }
+
+  browser.storage.onChanged.addListener((changes, area) => {
+    if (area === "local" && changes.service) updateToolbarLabel();
+  });
+
+  function setToolbarStatus(text, type = "") {
+    if (!toolbarStatus) return;
+    toolbarStatus.textContent = text;
+    toolbarStatus.className = type;
+  }
+
+  function setToolbarButton(text, disabled = false) {
+    if (!toolbarBtn) return;
+    toolbarBtn.textContent = text;
+    toolbarBtn.disabled = disabled;
   }
 
   // --- DOM Text Extraction ---
@@ -156,7 +223,7 @@
   }
 
   function extractTextBlocks() {
-    const blocks = new Map(); // blockElement -> { id, text, nodes[] }
+    const blocks = new Map();
     let blockId = 0;
 
     const walker = document.createTreeWalker(
@@ -164,22 +231,18 @@
       NodeFilter.SHOW_TEXT,
       {
         acceptNode(node) {
+          // Skip the toolbar itself
+          if (toolbarEl && toolbarEl.contains(node)) return NodeFilter.FILTER_REJECT;
+
           let parent = node.parentElement;
           while (parent) {
-            if (SKIP_TAGS.has(parent.tagName)) {
-              return NodeFilter.FILTER_REJECT;
-            }
+            if (SKIP_TAGS.has(parent.tagName)) return NodeFilter.FILTER_REJECT;
             parent = parent.parentElement;
           }
 
           const text = node.textContent.trim();
-          if (text.length < MIN_TEXT_LENGTH) {
-            return NodeFilter.FILTER_REJECT;
-          }
-
-          if (!isVisible(node)) {
-            return NodeFilter.FILTER_REJECT;
-          }
+          if (text.length < MIN_TEXT_LENGTH) return NodeFilter.FILTER_REJECT;
+          if (!isVisible(node)) return NodeFilter.FILTER_REJECT;
 
           return NodeFilter.FILTER_ACCEPT;
         },
@@ -191,20 +254,14 @@
       const blockParent = getBlockParent(textNode);
 
       if (!blocks.has(blockParent)) {
-        blocks.set(blockParent, {
-          id: blockId++,
-          text: "",
-          nodes: [],
-        });
+        blocks.set(blockParent, { id: blockId++, text: "", nodes: [] });
       }
 
       const block = blocks.get(blockParent);
       block.nodes.push(textNode);
 
-      // Use original text if this node was previously translated
       const nodeData = nodeMap.get(textNode);
-      const textToUse = nodeData && nodeData.original ? nodeData.original : textNode.textContent.trim();
-
+      const textToUse = nodeData?.original ?? textNode.textContent.trim();
       block.text += (block.text ? "\n" : "") + textToUse;
     }
 
@@ -215,46 +272,34 @@
 
   function applyTranslation(block, translatedText) {
     if (block.nodes.length === 1) {
-      // Single node: simple case
       const node = block.nodes[0];
-      const existingData = nodeMap.get(node);
-
+      const existing = nodeMap.get(node);
       nodeMap.set(node, {
-        original: existingData && existingData.original ? existingData.original : node.textContent,
+        original: existing?.original ?? node.textContent,
         translated: translatedText,
       });
       node.textContent = translatedText;
     } else {
-      // Multiple nodes: split translation intelligently by newlines
-      // LLMs typically preserve line structure in translations
-      const translatedLines = translatedText.split('\n').filter(line => line.trim().length > 0);
-
+      const translatedLines = translatedText.split("\n").filter(l => l.trim().length > 0);
       for (let i = 0; i < block.nodes.length; i++) {
         const node = block.nodes[i];
-        const existingData = nodeMap.get(node);
-
-        // Map each node to a corresponding translated line
+        const existing = nodeMap.get(node);
         let nodeTranslation;
 
         if (i < translatedLines.length) {
-          // We have a corresponding translated line
           nodeTranslation = translatedLines[i];
         } else if (translatedLines.length > 0) {
-          // Fewer translated lines than nodes: reuse last available line
           nodeTranslation = translatedLines[translatedLines.length - 1];
         } else {
-          // No translation available: keep original
-          nodeTranslation = existingData && existingData.original ? existingData.original : node.textContent;
+          nodeTranslation = existing?.original ?? node.textContent;
         }
 
-        // If this is the last node and there are extra translated lines, append them
         if (i === block.nodes.length - 1 && translatedLines.length > block.nodes.length) {
-          const extraLines = translatedLines.slice(block.nodes.length);
-          nodeTranslation = nodeTranslation + '\n' + extraLines.join('\n');
+          nodeTranslation = nodeTranslation + "\n" + translatedLines.slice(block.nodes.length).join("\n");
         }
 
         nodeMap.set(node, {
-          original: existingData && existingData.original ? existingData.original : node.textContent,
+          original: existing?.original ?? node.textContent,
           translated: nodeTranslation,
         });
         node.textContent = nodeTranslation;
@@ -262,148 +307,98 @@
     }
   }
 
-  async function startTranslation() {
-    const blocks = extractTextBlocks();
-
-    if (blocks.length === 0) {
-      showToast(messages.noText, true);
-      return;
-    }
-
-    console.log(`[Translator] Starting translation of ${blocks.length} blocks`);
-    console.log(`[Translator] Using ${nodeMap.size} previously translated nodes`);
-
-
-    showToast(messages.translating);
-
-    try {
-      // Detect blocks with PRE parent (plain text content)
-      const preBlocks = blocks.filter(block => {
-        return block.nodes.length > 0 &&
-               block.nodes[0].parentElement?.tagName === 'PRE';
-      });
-
-      const hasPlainTextContent = preBlocks.length > 0;
-
-
-      if (hasPlainTextContent) {
-        console.log(`[Translator] Detected ${preBlocks.length} plain text blocks - using hybrid strategy`);
-
-        // Translate PRE blocks node-by-node
-        for (const preBlock of preBlocks) {
-          console.log(`[Translator] Translating PRE block with ${preBlock.nodes.length} nodes individually`);
-          await translateNodeByNode(preBlock);
-        }
-
-        // Translate remaining non-PRE blocks normally
-        const nonPreBlocks = blocks.filter(block => !preBlocks.includes(block));
-        if (nonPreBlocks.length > 0) {
-          console.log(`[Translator] Translating ${nonPreBlocks.length} HTML blocks normally`);
-          await translateByBlocks(nonPreBlocks);
-        }
-      } else {
-        console.log(`[Translator] Detected HTML email - using block translation`);
-        await translateByBlocks(blocks);
-      }
-
-      console.log(`[Translator] Translation complete`);
-      showToast(messages.success, true);
-    } catch (e) {
-      console.error("[Translator] Translation failed:", e);
-      if (e.message.includes("Failed to fetch") || e.message.includes("NetworkError")) {
-        showToast(messages.errorUnreachable, true);
-      } else {
-        showToast(messages.error, true);
-      }
-      return;
-    }
-
-    // Notify background that translation is complete (for toggle menu)
-    port.postMessage({ command: "translationComplete" });
-  }
-
-  // Helper function to detect URLs
   function isURL(text) {
-    // Match http:// or https:// followed by non-whitespace
     return /^https?:\/\/[^\s]+$/.test(text.trim());
   }
 
-  // Strategy 1: Translate each node separately (for plain text emails)
   async function translateNodeByNode(block) {
     console.log(`[Translator] Translating ${block.nodes.length} nodes individually`);
-
     for (let i = 0; i < block.nodes.length; i++) {
       const node = block.nodes[i];
-      const existingData = nodeMap.get(node);
-      const originalText = existingData && existingData.original
-        ? existingData.original
-        : node.textContent.trim();
+      const existing = nodeMap.get(node);
+      const originalText = existing?.original ?? node.textContent.trim();
 
-      // Skip links (by parent tag or URL pattern)
-      const isLinkElement = node.parentElement?.tagName === 'A';
-      const isURLText = isURL(originalText);
+      if (node.parentElement?.tagName === "A" || isURL(originalText)) continue;
+      if (originalText.length < MIN_TEXT_LENGTH) continue;
 
-      if (isLinkElement || isURLText) {
-        console.log(`[Translator] Skipping node ${i} (link/URL, parent: ${node.parentElement?.tagName || 'null'})`);
-        continue;
-      }
-
-      if (originalText.length < MIN_TEXT_LENGTH) {
-        console.log(`[Translator] Skipping node ${i} (too short: ${originalText.length} chars)`);
-        continue;
-      }
-
-      console.log(`[Translator] Translating node ${i}/${block.nodes.length}: "${originalText.substring(0, 50)}..."`);
       const translatedText = await sendTranslateRequest(originalText);
-      console.log(`[Translator] Got translation for node ${i}: "${translatedText.substring(0, 50)}..."`);
-
-      nodeMap.set(node, {
-        original: originalText,
-        translated: translatedText,
-      });
+      nodeMap.set(node, { original: originalText, translated: translatedText });
       node.textContent = translatedText;
     }
   }
 
-  // Strategy 2: Translate blocks together (for HTML emails, preserves context)
   async function translateByBlocks(blocks) {
-    // Combine ALL text blocks into one for better context
     const allText = blocks.map(b => b.text).join("\n\n");
     console.log(`[Translator] Total text length: ${allText.length} characters`);
-    console.log(`[Translator] First 100 chars to translate:`, allText.substring(0, 100));
-
-    // Translate everything at once
     const fullTranslation = await sendTranslateRequest(allText);
-    console.log(`[Translator] Got full translation (length: ${fullTranslation?.length || 0}), applying to blocks...`);
-    console.log(`[Translator] First 200 chars of translation:`, fullTranslation?.substring(0, 200));
-
-    // Split the translation back into blocks (by double newlines)
     const translatedParts = fullTranslation.split("\n\n");
-    console.log(`[Translator] Split into ${translatedParts.length} parts`);
-
-    // Apply translations to blocks
     for (let i = 0; i < blocks.length; i++) {
-      const block = blocks[i];
-      let translatedText = translatedParts[i]?.trim() || block.text;
-      console.log(`[Translator] Applying translation to block ${i}: "${translatedText.substring(0, 50)}..."`);
-      applyTranslation(block, translatedText);
+      applyTranslation(blocks[i], translatedParts[i]?.trim() || blocks[i].text);
     }
-
     console.log(`[Translator] Translation applied to ${blocks.length} blocks`);
   }
 
-  // --- Restore Original Email ---
+  async function startTranslation() {
+    ensureToolbar();
+
+    // Re-apply cached translation without a service call
+    if (translationCached && nodeMap.size > 0) {
+      for (const [node, data] of nodeMap.entries()) {
+        if (document.body.contains(node) && data.translated) {
+          node.textContent = data.translated;
+        }
+      }
+      isTranslated = true;
+      setToolbarButton("Show Original");
+      setToolbarStatus(messages.success, "success");
+      return;
+    }
+
+    const blocks = extractTextBlocks();
+
+    if (blocks.length === 0) {
+      setToolbarStatus(messages.noText, "");
+      return;
+    }
+
+    console.log(`[Translator] Starting translation of ${blocks.length} blocks`);
+
+    setToolbarButton("Translate", true);
+    setToolbarStatus(messages.translating, "");
+
+    try {
+      const preBlocks = blocks.filter(b =>
+        b.nodes.length > 0 && b.nodes[0].parentElement?.tagName === "PRE"
+      );
+      const nonPreBlocks = blocks.filter(b => !preBlocks.includes(b));
+
+      for (const block of preBlocks) await translateNodeByNode(block);
+      if (nonPreBlocks.length > 0) await translateByBlocks(nonPreBlocks);
+
+      isTranslated = true;
+      translationCached = true;
+      setToolbarButton("Show Original");
+      setToolbarStatus(messages.success, "success");
+      console.log("[Translator] Translation complete");
+    } catch (e) {
+      console.error("[Translator] Translation failed:", e);
+      const msg = (e.message.includes("Failed to fetch") || e.message.includes("NetworkError"))
+        ? messages.errorUnreachable
+        : messages.error;
+      setToolbarStatus(msg, "error");
+      setToolbarButton("Translate");
+    }
+
+    port.postMessage({ command: "translationComplete" });
+  }
 
   function reloadPage() {
     console.log("[Translator] Restoring original email from nodeMap...");
-
     let restored = 0;
     let detached = 0;
 
-    // Restore each text node to its original content
     for (const [node, data] of nodeMap.entries()) {
       try {
-        // Verify node is still in the DOM
         if (document.body.contains(node)) {
           node.textContent = data.original;
           restored++;
@@ -416,24 +411,32 @@
       }
     }
 
+    // Keep nodeMap intact so the next Translate click can re-apply from cache
+    isTranslated = false;
+    setToolbarButton("Translate");
+    setToolbarStatus("", "");
     console.log(`[Translator] Restored ${restored} nodes, ${detached} detached`);
+  }
 
-    // Clear the nodeMap after restoration
-    nodeMap.clear();
+  // Only show toolbar if email language differs from target language
+  function initToolbar() {
+    browser.storage.local.get({ service: "ollama", ollamaTargetLang: "en", googleTargetLang: "en", libreTargetLang: "en" }).then((settings) => {
+      const serviceKey = { ollama: "ollamaTargetLang", google: "googleTargetLang", libretranslate: "libreTargetLang" };
+      const targetLang = settings[serviceKey[settings.service] || "ollamaTargetLang"] || "en";
+      const emailLang = (document.documentElement.lang || document.body?.lang || "").toLowerCase();
 
-    // Hide any active toast
-    if (toastEl) {
-      toastEl.classList.remove("ollama-toast-visible");
-      toastEl.classList.add("ollama-toast-hidden");
-    }
+      if (emailLang && emailLang.startsWith(targetLang.toLowerCase())) {
+        console.log(`[Translator] Email already in target language (${emailLang}), skipping toolbar`);
+        return;
+      }
 
-    // Clear timeout
-    if (toastTimeout) {
-      clearTimeout(toastTimeout);
-      toastTimeout = null;
-    }
+      ensureToolbar();
+    });
+  }
 
-    // Show confirmation toast
-    showToast(messages.success || "Original email restored", true);
+  if (document.body) {
+    initToolbar();
+  } else {
+    document.addEventListener("DOMContentLoaded", initToolbar, { once: true });
   }
 })();
