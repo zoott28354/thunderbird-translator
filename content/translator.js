@@ -134,8 +134,9 @@
       "padding": "5px 0",
       "margin": "0",
       "font-family": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-      "font-size": "13px",
+      "font-size": "12px",
       "line-height": "1",
+      "background": "Canvas",
     });
 
     toolbarSelect = document.createElement("select");
@@ -150,7 +151,7 @@
       "margin-left": "12px",
       "padding": "2px 6px",
       "border-radius": "3px",
-      "font-size": "11px",
+      "font-size": "12px",
       "cursor": "pointer",
     });
     toolbarSelect.addEventListener("change", () => {
@@ -201,7 +202,7 @@
       "display": "none",
       "flex-basis": "100%",
       "padding": "4px 12px 4px",
-      "font-size": "13px",
+      "font-size": "14px",
       "font-weight": "bold",
       "white-space": "nowrap",
       "overflow": "hidden",
@@ -213,7 +214,7 @@
       document.body.insertBefore(toolbarEl, document.body.firstChild);
       requestAnimationFrame(() => {
         const height = toolbarEl.getBoundingClientRect().height || 32;
-        document.body.style.setProperty("padding-top", (height + 8) + "px", "important");
+        document.body.style.setProperty("padding-top", height + "px", "important");
         document.body.style.setProperty("margin-top", "0", "important");
       });
     }
@@ -225,7 +226,7 @@
     if (!toolbarEl || !document.body) return;
     requestAnimationFrame(() => {
       const height = toolbarEl.getBoundingClientRect().height || 32;
-      document.body.style.setProperty("padding-top", (height + 8) + "px", "important");
+      document.body.style.setProperty("padding-top", height + "px", "important");
     });
   }
 

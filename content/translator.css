@@ -1,5 +1,5 @@
 /* Toolbar colors only — layout set inline in JS to override email styles */
-#translator-toolbar         { background: #f0f4ff; border-bottom: 1px solid #c5d0e6; }
+#translator-toolbar         { border-bottom: 1px solid #c5d0e6; }
 #translator-toolbar-label   { color: #666; background: #dde4f5; }
 #translator-toolbar button  { background: #0060df; border-color: #0060df; color: #fff; cursor: pointer; }
 #translator-toolbar button:hover    { background: #004ebc; border-color: #004ebc; }
@@ -9,7 +9,7 @@
 #translator-toolbar-status.success  { color: #1a7f37; }
 
 @media (prefers-color-scheme: dark) {
-  #translator-toolbar         { background: #1e2535; border-bottom-color: #3a4460; }
+  #translator-toolbar         { border-bottom-color: #3a4460; }
   #translator-toolbar-label   { color: #aab4cc; background: #2a3550; }
   #translator-toolbar button  { background: #2d5fa8; border-color: #2d5fa8; color: #e8edf8; }
   #translator-toolbar button:hover    { background: #1e4d8f; border-color: #1e4d8f; }
