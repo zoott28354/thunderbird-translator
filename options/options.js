@@ -16,10 +16,11 @@ const modelSelect = document.getElementById("model");
 const ollamaApiKeyInput = document.getElementById("ollamaApiKey");
 const libreUrlInput = document.getElementById("libreUrl");
 const libreApiKeyInput = document.getElementById("libreApiKey");
-const refreshBtn = document.getElementById("refreshModels");
-const testBtn = document.getElementById("testConnection");
-const saveBtn = document.getElementById("save");
-const statusDiv = document.getElementById("status");
+const refreshBtn    = document.getElementById("refreshModels");
+const testBtn       = document.getElementById("testConnection");
+const testLibreBtn  = document.getElementById("testLibreConnection");
+const saveBtn       = document.getElementById("save");
+const statusDiv     = document.getElementById("status");
 
 function showStatus(messageKey, isError, replacements = {}) {
   const message = browser.i18n.getMessage(messageKey, Object.values(replacements));
@@ -115,6 +116,27 @@ testBtn.addEventListener("click", async () => {
     await loadModels(modelSelect.value, url);
   } else {
     showStatus("connectionFailed", true, { error: result.error });
+  }
+});
+
+testLibreBtn.addEventListener("click", async () => {
+  clearStatus();
+  const url = libreUrlInput.value.trim();
+  if (!url) { showStatus("urlRequired", true); return; }
+
+  try {
+    const base = url.replace(/\/+$/, "").replace(/\/translate$/, "");
+    const apiKey = libreApiKeyInput.value.trim();
+    const endpoint = base + "/languages" + (apiKey ? "?api_key=" + encodeURIComponent(apiKey) : "");
+    const resp = await fetch(endpoint);
+    if (!resp.ok) throw new Error("HTTP " + resp.status + " " + resp.statusText);
+    const langs = await resp.json();
+    if (!Array.isArray(langs)) throw new Error("Unexpected response format");
+    statusDiv.textContent = "Connected. " + langs.length + " languages available.";
+    statusDiv.className = "status success";
+  } catch (e) {
+    statusDiv.textContent = "Connection failed: " + e.message;
+    statusDiv.className = "status error";
   }
 });
 

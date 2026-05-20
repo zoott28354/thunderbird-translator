@@ -38,6 +38,16 @@ foreach ($rel in $includes) {
     }
 }
 
+# Add all _docs files (screenshots)
+$docsPath = Join-Path $src '_docs'
+if (Test-Path $docsPath) {
+    Get-ChildItem -Path $docsPath -Recurse -File | ForEach-Object {
+        $rel = $_.FullName.Substring($src.Length + 1).Replace('\','/')
+        [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $_.FullName, $rel, [System.IO.Compression.CompressionLevel]::Optimal) | Out-Null
+        Write-Host "Added: $rel"
+    }
+}
+
 # Add all _locales files
 Get-ChildItem -Path (Join-Path $src '_locales') -Recurse -File | ForEach-Object {
     $rel = $_.FullName.Substring($src.Length + 1).Replace('\','/')

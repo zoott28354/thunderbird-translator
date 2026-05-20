@@ -1,242 +1,212 @@
 # Thunderbird Translator
 **(Local Ollama · Google Translate · LibreTranslate)**
 
+> **Fork of [zoott28354/thunderbird-translator](https://github.com/zoott28354/thunderbird-translator)**
+> Extended with compose translation, auto-translate, local LibreTranslate support, and a native toolbar UI.
+
+---
+
+## ✨ Features
+
+- 🏠 **Local translation** — Ollama: no data leaves your machine or network
+- 🤖 **Supports all Ollama models** — translategemma, Llama, Mistral, and more
+- 🌐 **Multiple translation services** — Ollama, Google Translate, LibreTranslate
+- 📨 **Translate received emails** — inline replacement with one-click restore
+- ✍️ **Translate while composing** — select text in the compose window and translate it in place
+- ⚡ **Auto-translate** — optionally translate every email automatically when opened
+- 🖥️ **Self-hosted support** — Ollama and LibreTranslate can run on your local machine or a private server
+- 🌍 **10 target languages** — English, Italian, Spanish, French, German, Portuguese, Russian, Japanese, Chinese, Korean
+- 💾 **Persistent settings** — service and language remembered per-service
+- 🌐 **Multilingual interface** — 7 UI languages: 🇬🇧 English, 🇮🇹 Italian, 🇩🇪 German, 🇫🇷 French, 🇪🇸 Spanish, 🇵🇹 Portuguese, 🇷🇺 Russian
+
+---
+
+## 📸 Screenshots
+
+### Reading — translate a received email
 <p align="center">
-  <img src="preview.png" alt="Thunderbird Translator Preview" width="600">
+  <img src="_docs/read toolbar.png" alt="Read toolbar button"><br><br>
+  <img src="_docs/read toolbar popup.png" alt="Read toolbar popup">
+</p>
+
+### Composing — translate selected text
+<p align="center">
+  <img src="_docs/compose toolbar.png" alt="Compose toolbar button"><br><br>
+  <img src="_docs/compose toolbar popup.png" alt="Compose toolbar popup">
 </p>
 
 ---
 
-A Thunderbird addon that replaces the email body with its translation (in-place) into multiple languages using Ollama local, Google Translate, or LibreTranslate (Euro-friendly).
-
-## ✨ Features
-
-- 🏠 **Local translation** - With Ollama: no data sent online, everything stays on your PC
-- 🤖 **Supports all Ollama models** - Translategemma, Llama, Mistral, Neural Chat, etc.
-- 🌐 **Multiple translation services** - Ollama, Google Translate, LibreTranslate
-- 🌍 **Multi-language translation** - Supports 10 languages: Italian, English, Spanish, French, German, Portuguese, Russian, Japanese, Chinese, Korean
-- 🖱️ **Simple interface** - Right-click on email and choose service and language
-- 💾 **Persistent settings** - Your configurations are saved automatically
-- 🌐 **Multilingual interface** - The addon is available in 7 languages: 🇮🇹 Italian, 🇬🇧 English, 🇩🇪 German, 🇫🇷 French, 🇪🇸 Spanish, 🇵🇹 Portuguese, 🇷🇺 Russian (automatically adapts to Thunderbird's language)
-
 ## 📋 Requirements
 
-### For Ollama (local, more private)
-
-1. **Ollama** installed on your PC
-   - Download from: https://ollama.ai
-
-2. **An Ollama model** downloaded
-   - Recommended: `ollama pull translategemma` (3GB, optimized)
-   - Alternatives: `llama3.2`, `mistral`
-
-3. **Thunderbird** 128 or later (ESR and non-ESR)
-
-⚠️ **Important note**: Before using Ollama, you'll need to configure `OLLAMA_ORIGINS` (see "Initial Configuration" section below).
-
-### For Google Translate or LibreTranslate (online, free)
-
-- **No requirements** - They work immediately
-- **Internet connection** required
-
-## 📦 Installation
-
-### Method 1: XPI File (Recommended)
-
-1. **Download** the `thunderbird-translator.xpi` file
-2. **Open Thunderbird**
-3. Go to **Menu > Tools > Add-ons**
-4. Click the gear icon ⚙️ in the top right
-5. Select **"Install Add-on from file..."**
-6. Select the `.xpi` file
-7. Confirm installation
-
-### Method 2: From Folder (Development)
-
-1. Extract files to a folder
-2. Open Thunderbird
-3. Press **Ctrl+Shift+A** (or from Menu > Tools > Add-ons)
-4. Click the gear icon ⚙️
-5. Select **"Debug Add-ons"**
-6. Click **"Load Temporary Add-on..."**
-7. Select the `manifest.json` file from the folder
-
-## ⚙️ Initial Configuration
-
-### 1. Open addon settings
-   - Menu > Tools > Add-ons > "Thunderbird Translator" > Preferences
-
-### 2. Choose service and language
-   - **Service**: Ollama (local) / Google Translate / LibreTranslate
-   - **Language**: Italian, English, Spanish, French, German, Portuguese, Russian, Japanese, Chinese, Korean
-
-### 3. If using Ollama: REQUIRED Configuration
-
-#### ⚠️ Configure OLLAMA_ORIGINS
-
-**Why is it needed?**
-For security reasons, Ollama blocks requests from browser extensions. You must explicitly authorize Thunderbird.
-
-**Recommended value (more secure):**
-```
-OLLAMA_ORIGINS=moz-extension://*
-```
-Allows only Firefox/Thunderbird extensions to access Ollama. Blocks all external websites.
-
-**How to configure:**
-
-**Windows (CMD):**
-```cmd
-setx OLLAMA_ORIGINS "moz-extension://*"
-```
-Then close and reopen the terminal and start Ollama:
-```cmd
-ollama serve
-```
-
-**Linux (permanent):**
-```bash
-echo 'export OLLAMA_ORIGINS="moz-extension://*"' >> ~/.bashrc
-source ~/.bashrc
-ollama serve
-```
-
-**macOS (permanent):**
-```bash
-echo 'export OLLAMA_ORIGINS="moz-extension://*"' >> ~/.zshrc
-source ~/.zshrc
-ollama serve
-```
-
-**Alternative option** (if you also need local apps):
-```
-OLLAMA_ORIGINS=moz-extension://*,http://localhost:11434
-```
-
-#### 4. Configure URL and model
-   - **Ollama URL**: `http://localhost:11434` (default)
-   - **Test connection**: Click to verify that Ollama is reachable
-   - **Model**: Select `translategemma` (recommended) or another installed model
-
-#### 5. Save
-   - Click "Save"
-
-## 🎯 How to Use
-
-### Context Menu (Recommended)
-1. **Open an email** you want to translate
-2. **Right-click** on the email body
-3. **Choose the translation service**:
-   - **"Translate with Ollama"** → Local and private translation (requires Ollama installed)
-   - **"Translate with Google Translate"** → Free online translation
-   - **"Translate with LibreTranslate"** → Open-source online translation
-4. **Select the target language** from the submenu
-   - The selected language will appear in **bold**
-   - This choice becomes the default for that service
-5. Wait for the message "Translation completed"
-
-**Example**: If you select "Translate with Google Translate > Español", all subsequent translations with Google Translate will be in Spanish (until you choose another language).
-
-### Show Original
-- After translation, **right-click** on the text
-- Select **"Show Original"** to restore the original text
-
-## 🔒 Security
-
-### ✅ What is Secure
-- **Ollama mode**: 100% local — no data sent online, everything processed on your PC
-- **Google Translate / LibreTranslate mode**: email text is sent to external servers for translation (no other data is shared)
-- **No tracking** - No statistics, tracking, or remote logs
-- **No credentials** - Doesn't save passwords or sensitive information
-- **Minimal permissions** - Only accesses email text for translation
-
-> **Want total privacy?** Use the Ollama-only version: [Thunderbird Ollama Translator](https://github.com/zoott28354/thunderbird-ollama-translator) — zero external connections, everything stays on your machine.
-
-### 🛡️ Required Permissions
-- `messagesRead` - Reads email content (for translation)
-- `messagesModify` - Modifies displayed text (to show translation)
-- `menus` - Adds context menu
-- `storage` - Saves settings
-- `tabs` - Injects script into email
-- **Host permissions** (only if using Google Translate or LibreTranslate):
-  - `https://translate.google.com/*` - Google Translate API
-  - `https://translate.fedilab.app/*` - LibreTranslate instance
-  - `http://localhost/*` - For local Ollama
-
-No access to:
-- ❌ Address book, calendar, chat
-- ❌ Account credentials
-- ❌ Thunderbird database
-- ❌ File system (except localhost for Ollama)
-
-## 🚨 Troubleshooting
-
-### LibreTranslate: random errors or slow responses
-
-LibreTranslate uses free public instances. The addon automatically tries 3 instances in sequence — if one fails, it moves to the next. Random errors (timeouts, 429 rate-limit, 503 server down) are normal and expected with free public instances. Simply retry after a few seconds.
-
-### "Error: Ollama error: 403 Forbidden" ⚠️
-
-**CAUSE**: Ollama blocks requests from browser extensions for security reasons.
-
-**COMPLETE SOLUTION**:
-
-1. **Stop Ollama** if it's running (Ctrl+C in the terminal where `ollama serve` is running)
-
-2. **Configure the environment variable** (recommended value for security):
-
-   **Windows (CMD):**
-   ```cmd
-   setx OLLAMA_ORIGINS "moz-extension://*"
-   ```
-
-   **Linux:**
-   ```bash
-   echo 'export OLLAMA_ORIGINS="moz-extension://*"' >> ~/.bashrc
-   source ~/.bashrc
-   ```
-
-   **macOS:**
-   ```bash
-   echo 'export OLLAMA_ORIGINS="moz-extension://*"' >> ~/.zshrc
-   source ~/.zshrc
-   ```
-
-3. **Close and reopen the terminal**, then start Ollama:
-   ```bash
-   ollama serve
-   ```
-
-4. **Verify the configuration**:
-   - Open Thunderbird
-   - Go to addon settings
-   - Click "Test connection"
-   - Should show "Connection successful: X models available"
-
-**Note**: `moz-extension://*` allows only Firefox/Thunderbird extensions to access Ollama, blocking external websites (more secure).
-
-## 📜 Changelog
-
-### v1.5.0
-- Deterministic tab/preview routing — translating from a separate email tab no longer interferes with the preview pane (and vice versa)
-- Context menu now appears only in the email body (not in folder pane or message list)
-- Programmatic `messageDisplayScripts` registration for broad Thunderbird compatibility (128 ESR to 147+)
-
-### v1.0.0
-- Initial release with Ollama, Google Translate, and LibreTranslate support
-
-## 📝 License
-
-MIT License - Free to use, modify and distribute.
-
-## 🤝 Support
-
-If you have problems:
-1. **Open the console** (Ctrl+Shift+I in a Thunderbird tab)
-2. **Right-click** on the email > Select service and translation language
-3. **Look for blue messages** `[Translator]` in the console
-4. **Copy error messages** and share them
+- **Thunderbird** 128 or later (ESR and non-ESR)
+- **Google Translate** — works out of the box, no configuration needed
+- **Ollama** — must be installed and running (local machine or private server); see [setup](#ollama-1)
+- **LibreTranslate** — must be reachable (local machine, private server, or public instance); see [setup](#libretranslate-1)
 
 ---
 
-**Happy translating!** 🎉
+## 📦 Installation
+
+### From XPI file
+1. Download `thunderbird-translator.xpi` from [Releases](../../releases)
+2. In Thunderbird: **Menu → Tools → Add-ons**
+3. Click the gear icon ⚙️ → **Install Add-on from file…**
+4. Select the `.xpi` file and confirm
+
+### Development / temporary load
+1. In Thunderbird: **Ctrl+Shift+A → gear icon → Debug Add-ons**
+2. Click **Load Temporary Add-on…**
+3. Select `manifest.json` from the project folder
+
+---
+
+## ⚙️ Configuration
+
+Open **Menu → Tools → Add-ons → Thunderbird Translator → Preferences**.
+
+<p align="center">
+  <img src="_docs/options.png" alt="Options page">
+</p>
+
+### Ollama
+
+| Field | Default | Notes |
+|---|---|---|
+| Server URL | `http://localhost:11434` | Change if Ollama runs on another machine |
+| Model | — | Select from installed models; click ↻ to refresh |
+| API Key | *(blank)* | Required only if Ollama is behind an auth proxy |
+
+**Test Connection** — verifies reachability and lists available models.
+
+#### Setup
+
+**Local machine** — install from [ollama.ai](https://ollama.ai), then pull a model:
+```
+ollama pull translategemma
+```
+
+**Private server** — see the [Ollama Docker documentation](https://hub.docker.com/r/ollama/ollama).
+
+### LibreTranslate
+
+| Field | Default | Notes |
+|---|---|---|
+| Server URL | `https://libretranslate.com` | Replace with your own instance URL |
+| API Key | *(blank)* | Required by some instances; leave blank for open ones |
+
+**Test Connection** — calls `/languages` on the configured URL to verify reachability.
+
+#### Setup
+
+**Local machine** — see [LibreTranslate on GitHub](https://github.com/LibreTranslate/LibreTranslate).
+
+**Private server (Docker Compose example):**
+```yaml
+libretranslate:
+  image: libretranslate/libretranslate
+  ports:
+    - "5000:5000"
+  environment:
+    - LT_LOAD_ONLY=en,it,es,fr,de,pt,ru
+```
+No API key needed unless you configure one.
+
+---
+
+## 🎯 How to Use
+
+### Reading emails
+
+A **Translate** button appears in the message toolbar (next to Reply, Forward, etc.).
+
+1. Open an email
+2. Click **Translate** in the toolbar
+3. Select service and target language in the popup
+4. Click **Translate** — the email body is replaced inline
+5. Click **Show Original** to restore
+
+#### Auto-translate
+Enable the **Auto-translate** checkbox in the popup to translate every email automatically when opened. A badge on the toolbar button shows progress:
+
+<p align="center">
+  <img src="_docs/loading.png" alt="Translating…">&nbsp;&nbsp;
+  <img src="_docs/success.png" alt="Done">&nbsp;&nbsp;
+  <img src="_docs/fail.png" alt="Error">
+</p>
+
+### Composing emails
+
+A **Translate** button appears in the compose toolbar.
+
+1. Write or paste text in the compose body
+2. **Select** the text you want to translate
+3. Click **Translate** in the toolbar
+4. Choose service and target language in the popup
+5. Click **Translate Selection** — selected text is replaced in place (undo works)
+
+---
+
+## 🔒 Security
+
+| Mode | Data sent externally |
+|---|---|
+| Ollama | Nothing — 100% local |
+| Google Translate | Email text only, to Google servers |
+| LibreTranslate (self-hosted) | Nothing — stays on your network |
+| LibreTranslate (public) | Email text only, to the configured instance |
+
+No tracking, no analytics, no credentials stored beyond what you enter in settings.
+
+> **Want total privacy?** Use [Thunderbird Ollama Translator](https://github.com/zoott28354/thunderbird-ollama-translator) — zero external connections.
+
+### Permissions
+- `messagesRead` — reads email content for translation
+- `messagesModify` — replaces displayed text with translation
+- `compose` — injects translation script into compose windows
+- `storage` — saves your settings
+- `tabs` — identifies the active window for popup communication
+- `*://*/*` — required to reach Ollama, Google Translate, or any user-configured LibreTranslate URL
+
+---
+
+## 🚨 Troubleshooting
+
+### "Error: Ollama error: 403 Forbidden"
+Some Ollama versions or configurations block requests from browser extensions. Set `OLLAMA_ORIGINS=moz-extension://*` before starting Ollama and restart it.
+
+### "Ollama model not found"
+Run `ollama pull translategemma` (or whichever model is selected in settings).
+
+### LibreTranslate: connection fails
+- Verify the URL in settings matches your instance (e.g. `http://192.168.1.10:5000`)
+- If your instance requires an API key, enter it in the API Key field
+- Click **Test Connection** to confirm reachability before translating
+
+### Compose: "No text selected"
+Highlight text in the compose body *before* clicking the Translate button in the popup.
+
+---
+
+## 📜 Changelog
+
+### v1.7.0 (fork — jctots)
+- **Compose translation** — select text in compose window and translate in place
+- **Native toolbar UI** — action buttons in read and compose toolbars replace injected toolbar
+- **Auto-translate** — optional per-email auto-translation with badge progress indicator
+- **Self-hosted LibreTranslate** — configurable URL + optional API key; test connection button
+- **Ollama API key** support for proxied/remote instances
+
+### v1.5.0 (fork — jctots)
+- Deterministic tab/preview routing
+- `messageDisplayScripts` programmatic registration (Thunderbird 128–147+)
+
+### v1.0.0 (zoott28354)
+- Initial release: Ollama, Google Translate, LibreTranslate; context menu UI; 7 UI locales
+
+---
+
+## 📝 License
+
+MIT — free to use, modify, and distribute.
+Original work by [zoott28354](https://github.com/zoott28354/thunderbird-translator).
