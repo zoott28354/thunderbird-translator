@@ -197,7 +197,14 @@ Highlight text in the compose body *before* clicking the Translate button in the
 - **Self-hosted LibreTranslate** — configurable URL + optional API key; test connection button
 - **Ollama API key** support for proxied/remote instances
 
-### v1.5.0 (fork — jctots)
+### v1.6.0 (fork — jctots)
+- **Injected toolbar** in message view — service selector, language selector, Translate/Restore buttons
+- **Dark mode** support
+- Source language detection and translation cache
+- Dynamic Ollama URL; service dropdown in toolbar
+- Simplified options page; fork authorship
+
+### v1.5.0 (zoott28354)
 - Deterministic tab/preview routing
 - `messageDisplayScripts` programmatic registration (Thunderbird 128–147+)
 
