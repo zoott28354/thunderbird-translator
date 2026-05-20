@@ -6,10 +6,12 @@ const LANG_STORAGE_KEY = {
   libretranslate: "libreTargetLang",
 };
 
-const serviceEl = document.getElementById("service");
-const langEl    = document.getElementById("lang");
-const actionBtn = document.getElementById("action-btn");
-const statusEl  = document.getElementById("status");
+const serviceEl   = document.getElementById("service");
+const langEl      = document.getElementById("lang");
+const actionBtn   = document.getElementById("action-btn");
+const statusEl    = document.getElementById("status");
+const autoCheck   = document.getElementById("auto-translate");
+const autoLabel   = document.getElementById("auto-label");
 
 let isCompose = false;
 
@@ -42,6 +44,11 @@ async function init() {
   if (isCompose) {
     setBtn("Translate Selection");
   } else {
+    // Show auto-translate checkbox only in read mode
+    autoLabel.classList.add("visible");
+    const stored = await browser.storage.local.get({ autoTranslate: false });
+    autoCheck.checked = stored.autoTranslate;
+
     // Query current translation state from the active content script
     try {
       const state = await browser.runtime.sendMessage({ command: "popupGetState" });
@@ -95,6 +102,17 @@ actionBtn.addEventListener("click", async () => {
   } catch (e) {
     setStatus(e.message || "Error", "error");
     setBtn(prevText);
+  }
+});
+
+autoCheck.addEventListener("change", async () => {
+  await browser.storage.local.set({ autoTranslate: autoCheck.checked });
+  // If just enabled and email isn't translated yet, translate immediately
+  if (autoCheck.checked) {
+    const state = await browser.runtime.sendMessage({ command: "popupGetState" }).catch(() => null);
+    if (state && !state.isTranslated) {
+      actionBtn.click();
+    }
   }
 });
 

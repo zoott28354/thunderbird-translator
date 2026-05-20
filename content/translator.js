@@ -224,5 +224,13 @@
     isTranslated = false;
   }
 
+  // Auto-translate on load if setting is enabled
+  browser.storage.local.get({ autoTranslate: false }).then(async (s) => {
+    if (!s.autoTranslate) return;
+    port.postMessage({ command: "setBadge" });
+    const result = await startTranslation();
+    port.postMessage({ command: "clearBadge", success: result.success, error: result.error });
+  });
+
   console.log("[Translator] Ready");
 })();

@@ -137,6 +137,25 @@ messenger.runtime.onConnect.addListener((port) => {
       // Response to popup command
       if (["translateDone", "revertDone", "stateDone"].includes(message.command)) {
         resolvePending(message.reqId, message);
+        return;
+      }
+
+      // Badge updates from content script (auto-translate feedback)
+      if (message.command === "setBadge") {
+        messenger.messageDisplayAction.setBadgeText({ tabId, text: "..." });
+        messenger.messageDisplayAction.setBadgeBackgroundColor({ tabId, color: "#f90" });
+        return;
+      }
+      if (message.command === "clearBadge") {
+        if (message.success) {
+          messenger.messageDisplayAction.setBadgeText({ tabId, text: "✓" });
+          messenger.messageDisplayAction.setBadgeBackgroundColor({ tabId, color: "#1a7f37" });
+          setTimeout(() => messenger.messageDisplayAction.setBadgeText({ tabId, text: "" }), 2000);
+        } else {
+          messenger.messageDisplayAction.setBadgeText({ tabId, text: "!" });
+          messenger.messageDisplayAction.setBadgeBackgroundColor({ tabId, color: "#c00" });
+        }
+        return;
       }
     });
     return;
