@@ -6,6 +6,12 @@
 
 ---
 
+<p align="center">
+  <img src="_docs/demo.gif" alt="Thunderbird Translator demo">
+</p>
+
+---
+
 ## ✨ Features
 
 - 🔒 **Privacy-first** — translate on your own machine or private network; your emails stay under your control
@@ -19,22 +25,6 @@
 - 🌍 **10 target languages** — English, Italian, Spanish, French, German, Portuguese, Russian, Japanese, Chinese, Korean
 - 💾 **Persistent settings** — service and language remembered per-service
 - 🌐 **Multilingual interface** — 7 UI languages: 🇬🇧 English, 🇮🇹 Italian, 🇩🇪 German, 🇫🇷 French, 🇪🇸 Spanish, 🇵🇹 Portuguese, 🇷🇺 Russian
-
----
-
-## 📸 Screenshots
-
-### Reading — translate a received email
-<p align="center">
-  <img src="_docs/read toolbar.png" alt="Read toolbar button"><br><br>
-  <img src="_docs/read toolbar popup.png" alt="Read toolbar popup">
-</p>
-
-### Composing — translate selected text
-<p align="center">
-  <img src="_docs/compose toolbar.png" alt="Compose toolbar button"><br><br>
-  <img src="_docs/compose toolbar popup.png" alt="Compose toolbar popup">
-</p>
 
 ---
 
