@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Thunderbird Translator",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "Translate emails using Ollama, Google Translate or LibreTranslate",
   "author": "jctots (fork of zoott28354)",
   "default_locale": "en",
@@ -16,11 +16,23 @@
   "permissions": [
     "messagesRead",
     "messagesModify",
+    "compose",
     "storage",
     "tabs",
-    "scripting",
     "*://*/*"
   ],
+
+  "message_display_action": {
+    "default_title": "Translate",
+    "default_icon": "icons/translate-48.png",
+    "default_popup": "popup/popup.html"
+  },
+
+  "compose_action": {
+    "default_title": "Translate",
+    "default_icon": "icons/translate-48.png",
+    "default_popup": "popup/popup.html"
+  },
 
   "background": {
     "scripts": ["background.js"]
