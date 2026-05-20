@@ -1,5 +1,5 @@
 # Thunderbird Translator
-**(Local Ollama · Google Translate · LibreTranslate)**
+**Privacy-first email translation — Ollama (local/self-hosted), LibreTranslate (self-hosted or public), or Google Translate as a fallback**
 
 > **Fork of [zoott28354/thunderbird-translator](https://github.com/zoott28354/thunderbird-translator)**
 > Extended with compose translation, auto-translate, local LibreTranslate support, and a native toolbar UI.
@@ -8,13 +8,14 @@
 
 ## ✨ Features
 
-- 🏠 **Local translation** — Ollama: no data leaves your machine or network
+- 🔒 **Privacy-first** — translate on your own machine or private network; your emails stay under your control
+- 🏠 **Ollama** — local or self-hosted; zero external connections, works fully offline
+- 🖥️ **LibreTranslate** — self-hosted on your own server, or use a public instance
+- 🌐 **Google Translate** — available as a fallback when privacy is not a concern
 - 🤖 **Supports all Ollama models** — translategemma, Llama, Mistral, and more
-- 🌐 **Multiple translation services** — Ollama, Google Translate, LibreTranslate
 - 📨 **Translate received emails** — inline replacement with one-click restore
 - ✍️ **Translate while composing** — select text in the compose window and translate it in place
 - ⚡ **Auto-translate** — optionally translate every email automatically when opened
-- 🖥️ **Self-hosted support** — Ollama and LibreTranslate can run on your local machine or a private server
 - 🌍 **10 target languages** — English, Italian, Spanish, French, German, Portuguese, Russian, Japanese, Chinese, Korean
 - 💾 **Persistent settings** — service and language remembered per-service
 - 🌐 **Multilingual interface** — 7 UI languages: 🇬🇧 English, 🇮🇹 Italian, 🇩🇪 German, 🇫🇷 French, 🇪🇸 Spanish, 🇵🇹 Portuguese, 🇷🇺 Russian
@@ -99,18 +100,9 @@ ollama pull translategemma
 
 #### Setup
 
-**Local machine** — see [LibreTranslate on GitHub](https://github.com/LibreTranslate/LibreTranslate).
+**Self-hosted** — see [LibreTranslate on GitHub](https://github.com/LibreTranslate/LibreTranslate) for installation options (local or server).
 
-**Private server (Docker Compose example):**
-```yaml
-libretranslate:
-  image: libretranslate/libretranslate
-  ports:
-    - "5000:5000"
-  environment:
-    - LT_LOAD_ONLY=en,it,es,fr,de,pt,ru
-```
-No API key needed unless you configure one.
+**Public instances** — use `https://libretranslate.com` or any other public instance. Some require an API key.
 
 ---
 
@@ -151,22 +143,21 @@ A **Translate** button appears in the compose toolbar.
 
 | Mode | Data sent externally |
 |---|---|
-| Ollama | Nothing — 100% local |
-| Google Translate | Email text only, to Google servers |
-| LibreTranslate (self-hosted) | Nothing — stays on your network |
+| Ollama (local) | Nothing — 100% on your machine |
+| Ollama (self-hosted) | Nothing — stays on your private network |
+| LibreTranslate (self-hosted) | Nothing — stays on your private network |
 | LibreTranslate (public) | Email text only, to the configured instance |
+| Google Translate | Email text only, to Google servers |
 
-No tracking, no analytics, no credentials stored beyond what you enter in settings.
-
-> **Want total privacy?** Use [Thunderbird Ollama Translator](https://github.com/zoott28354/thunderbird-ollama-translator) — zero external connections.
+No tracking, no analytics. API keys and settings are stored locally in Thunderbird's own storage — never transmitted.
 
 ### Permissions
 - `messagesRead` — reads email content for translation
 - `messagesModify` — replaces displayed text with translation
 - `compose` — injects translation script into compose windows
-- `storage` — saves your settings
+- `storage` — saves your settings locally
 - `tabs` — identifies the active window for popup communication
-- `*://*/*` — required to reach Ollama, Google Translate, or any user-configured LibreTranslate URL
+- `*://*/*` — required because Ollama and LibreTranslate URLs are user-configurable; the extension only contacts the URLs you set in preferences
 
 ---
 
