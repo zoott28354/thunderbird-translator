@@ -78,7 +78,7 @@
     }
   },
   "connectionSuccess": {
-    "message": "Conexão bem-sucedida! {count} modelos encontrados.",
+    "message": "Conexão bem-sucedida! $COUNT$ modelos encontrados.",
     "description": "Mensagem de conexão bem-sucedida",
     "placeholders": {
       "count": {

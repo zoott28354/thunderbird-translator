@@ -1,9 +1,9 @@
 {
   "manifest_version": 2,
   "name": "Thunderbird Translator",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "description": "Translate emails using Ollama, Google Translate or LibreTranslate",
-  "author": "zoott28354",
+  "author": "jctots (fork of zoott28354)",
   "default_locale": "en",
 
   "browser_specific_settings": {
@@ -16,7 +16,6 @@
   "permissions": [
     "messagesRead",
     "messagesModify",
-    "menus",
     "storage",
     "tabs",
     "scripting",

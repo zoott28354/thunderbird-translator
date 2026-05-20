@@ -78,7 +78,7 @@
     }
   },
   "connectionSuccess": {
-    "message": "Connection successful! {count} models found.",
+    "message": "Connection successful! $COUNT$ models found.",
     "description": "Successful connection message",
     "placeholders": {
       "count": {

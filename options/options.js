@@ -1,38 +1,28 @@
 "use strict";
 
-// --- Internationalization ---
-
 function translatePage() {
-  // Traduci tutti gli elementi con data-i18n
   document.querySelectorAll("[data-i18n]").forEach((el) => {
     const key = el.getAttribute("data-i18n");
     el.textContent = browser.i18n.getMessage(key);
   });
-
-  // Traduci gli attributi title
   document.querySelectorAll("[title-i18n]").forEach((el) => {
     const key = el.getAttribute("title-i18n");
     el.setAttribute("title", browser.i18n.getMessage(key));
   });
 }
 
-const serviceSelect = document.getElementById("service");
-const targetLanguageSelect = document.getElementById("targetLanguage");
-const ollamaSection = document.getElementById("ollamaSection");
 const urlInput = document.getElementById("ollamaUrl");
 const modelSelect = document.getElementById("model");
+const ollamaApiKeyInput = document.getElementById("ollamaApiKey");
+const libreUrlInput = document.getElementById("libreUrl");
+const libreApiKeyInput = document.getElementById("libreApiKey");
 const refreshBtn = document.getElementById("refreshModels");
 const testBtn = document.getElementById("testConnection");
 const saveBtn = document.getElementById("save");
 const statusDiv = document.getElementById("status");
 
-// Mostra/nascondi la sezione Ollama
-serviceSelect.addEventListener("change", () => {
-  ollamaSection.style.display = serviceSelect.value === "ollama" ? "block" : "none";
-});
-
 function showStatus(messageKey, isError, replacements = {}) {
-  let message = browser.i18n.getMessage(messageKey, Object.values(replacements));
+  const message = browser.i18n.getMessage(messageKey, Object.values(replacements));
   statusDiv.textContent = message;
   statusDiv.className = "status " + (isError ? "error" : "success");
 }
@@ -43,23 +33,23 @@ function clearStatus() {
 }
 
 async function loadSettings() {
-  const settings = await browser.runtime.sendMessage({ command: "getSettings" });
-  
-  serviceSelect.value = settings.service || "ollama";
-  targetLanguageSelect.value = settings.targetLanguage || "it";
-  urlInput.value = settings.ollamaUrl || "http://localhost:11434";
-  
-  // Mostra/nascondi la sezione Ollama
-  ollamaSection.style.display = serviceSelect.value === "ollama" ? "block" : "none";
+  const settings = await browser.storage.local.get({
+    ollamaUrl: "http://localhost:11434",
+    model: "",
+    ollamaApiKey: "",
+    libreUrl: "https://libretranslate.com",
+    libreApiKey: "",
+  });
 
-  // Carica modelli solo se Ollama
-  if (serviceSelect.value === "ollama") {
-    await loadModels(settings.model);
-  }
+  urlInput.value = settings.ollamaUrl;
+  ollamaApiKeyInput.value = settings.ollamaApiKey;
+  libreUrlInput.value = settings.libreUrl;
+  libreApiKeyInput.value = settings.libreApiKey;
+  await loadModels(settings.model);
 }
 
-async function loadModels(selectedModel) {
-  const result = await browser.runtime.sendMessage({ command: "getModels" });
+async function loadModels(selectedModel, ollamaUrl) {
+  const result = await browser.runtime.sendMessage({ command: "getModels", ollamaUrl });
 
   modelSelect.innerHTML = "";
 
@@ -91,9 +81,7 @@ async function loadModels(selectedModel) {
     const opt = document.createElement("option");
     opt.value = name;
     opt.textContent = name;
-    if (name === selectedModel) {
-      opt.selected = true;
-    }
+    if (name === selectedModel) opt.selected = true;
     modelSelect.appendChild(opt);
   }
 
@@ -108,8 +96,7 @@ async function loadModels(selectedModel) {
 
 refreshBtn.addEventListener("click", async () => {
   clearStatus();
-  const currentModel = modelSelect.value;
-  await loadModels(currentModel);
+  await loadModels(modelSelect.value, urlInput.value.trim());
   showStatus("modelsRefreshed", false);
 });
 
@@ -121,14 +108,11 @@ testBtn.addEventListener("click", async () => {
     return;
   }
 
-  const result = await browser.runtime.sendMessage({
-    command: "testConnection",
-    ollamaUrl: url,
-  });
+  const result = await browser.runtime.sendMessage({ command: "testConnection", ollamaUrl: url });
 
   if (result.success) {
     showStatus("connectionSuccess", false, { count: result.models.length });
-    await loadModels(modelSelect.value);
+    await loadModels(modelSelect.value, url);
   } else {
     showStatus("connectionFailed", true, { error: result.error });
   }
@@ -137,40 +121,20 @@ testBtn.addEventListener("click", async () => {
 saveBtn.addEventListener("click", async () => {
   clearStatus();
 
-  const service = serviceSelect.value;
-  const targetLanguage = targetLanguageSelect.value;
   const ollamaUrl = urlInput.value.trim();
   const model = modelSelect.value;
+  const ollamaApiKey = ollamaApiKeyInput.value.trim();
+  const libreUrl = libreUrlInput.value.trim();
+  const libreApiKey = libreApiKeyInput.value.trim();
 
-  if (service === "ollama") {
-    if (!ollamaUrl) {
-      showStatus("urlRequired", true);
-      return;
-    }
-    if (!model) {
-      showStatus("modelRequired", true);
-      return;
-    }
+  if (!ollamaUrl) {
+    showStatus("urlRequired", true);
+    return;
   }
 
-  // Salva TUTTI i campi sempre, non solo quando Ollama è selezionato
-  const settings = {
-    service,
-    targetLanguage,
-    ollamaUrl,
-    model,
-  };
-
-  await browser.runtime.sendMessage({
-    command: "saveSettings",
-    ...settings,
-  });
-
+  await browser.runtime.sendMessage({ command: "saveSettings", ollamaUrl, model, ollamaApiKey, libreUrl, libreApiKey });
   showStatus("settingsSaved", false);
 });
 
-// Traduci la pagina al caricamento
 translatePage();
-
-// Carica le impostazioni all'apertura della pagina
 loadSettings();

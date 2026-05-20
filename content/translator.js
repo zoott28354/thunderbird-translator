@@ -23,6 +23,7 @@
 
   let toolbarEl = null;
   let toolbarSelect = null;
+  let toolbarLangSelect = null;
   let toolbarBtn = null;
   let toolbarStatus = null;
   let toolbarSubjectEl = null;
@@ -35,6 +36,25 @@
     ollama: "Ollama",
     google: "Google Translate",
     libretranslate: "LibreTranslate",
+  };
+
+  const LANGUAGE_NAMES = {
+    en: "English",
+    it: "Italiano",
+    es: "Español",
+    fr: "Français",
+    de: "Deutsch",
+    pt: "Português",
+    ru: "Русский",
+    ja: "日本語",
+    zh: "中文",
+    ko: "한국어",
+  };
+
+  const LANG_STORAGE_KEY = {
+    ollama: "ollamaTargetLang",
+    google: "googleTargetLang",
+    libretranslate: "libreTargetLang",
   };
 
   let messages = {
@@ -52,11 +72,8 @@
 
   const pendingRequests = new Map();
   let nextRequestId = 0;
-  let targetLanguage = null;
 
   port.onMessage.addListener((message) => {
-    console.log("[Translator Content Script] Received message:", message.command || `id:${message.id}`, message);
-
     if (message.command === "messages") {
       messages = message.data;
       console.log("[Translator Content Script] Messages loaded");
@@ -69,7 +86,6 @@
     }
 
     if (message.id != null && pendingRequests.has(message.id)) {
-      console.log(`[Translator Content Script] Processing translation response for id ${message.id}`);
       const { resolve, reject } = pendingRequests.get(message.id);
       pendingRequests.delete(message.id);
       if (message.success) {
@@ -77,21 +93,6 @@
       } else {
         reject(new Error(message.error));
       }
-      return;
-    } else if (message.id != null) {
-      console.warn(`[Translator Content Script] Received response for unknown request id: ${message.id}`);
-    }
-
-    if (message.command === "startTranslation") {
-      console.log("[Translator Content Script] Starting translation...");
-      if (message.targetLanguage) {
-        targetLanguage = message.targetLanguage;
-        console.log(`[Translator Content Script] Target language set to: ${targetLanguage}`);
-      }
-      startTranslation();
-    } else if (message.command === "reloadOriginal") {
-      console.log("[Translator Content Script] Reloading original email");
-      reloadPage();
     }
   });
 
@@ -102,9 +103,7 @@
     return new Promise((resolve, reject) => {
       const id = nextRequestId++;
       pendingRequests.set(id, { resolve, reject });
-      const message = { command: "translate", id, text };
-      if (targetLanguage) message.targetLanguage = targetLanguage;
-      port.postMessage(message);
+      port.postMessage({ command: "translate", id, text });
     });
   }
 
@@ -139,6 +138,7 @@
       "background": "Canvas",
     });
 
+    // Service dropdown
     toolbarSelect = document.createElement("select");
     toolbarSelect.id = "translator-toolbar-select";
     for (const [value, label] of Object.entries(SERVICE_NAMES)) {
@@ -155,8 +155,35 @@
       "cursor": "pointer",
     });
     toolbarSelect.addEventListener("change", () => {
-      const newService = toolbarSelect.value;
-      browser.storage.local.set({ service: newService });
+      browser.storage.local.set({ service: toolbarSelect.value });
+      updateLangSelect();
+      if (isTranslated) {
+        reloadPage();
+        nodeMap.clear();
+        translationCached = false;
+        translatedSubjectText = null;
+      }
+    });
+
+    // Language dropdown
+    toolbarLangSelect = document.createElement("select");
+    toolbarLangSelect.id = "translator-toolbar-lang";
+    for (const [value, label] of Object.entries(LANGUAGE_NAMES)) {
+      const opt = document.createElement("option");
+      opt.value = value;
+      opt.textContent = label;
+      toolbarLangSelect.appendChild(opt);
+    }
+    applyInlineLayout(toolbarLangSelect, {
+      "margin-left": "8px",
+      "padding": "2px 6px",
+      "border-radius": "3px",
+      "font-size": "12px",
+      "cursor": "pointer",
+    });
+    toolbarLangSelect.addEventListener("change", () => {
+      const langKey = LANG_STORAGE_KEY[toolbarSelect.value] || "ollamaTargetLang";
+      browser.storage.local.set({ [langKey]: toolbarLangSelect.value });
       if (isTranslated) {
         reloadPage();
         nodeMap.clear();
@@ -193,6 +220,7 @@
     });
 
     toolbarEl.appendChild(toolbarSelect);
+    toolbarEl.appendChild(toolbarLangSelect);
     toolbarEl.appendChild(toolbarBtn);
     toolbarEl.appendChild(toolbarStatus);
 
@@ -219,7 +247,7 @@
       });
     }
 
-    updateToolbarSelect();
+    updateToolbarSelects();
   }
 
   function updateBodyPadding() {
@@ -243,15 +271,32 @@
     updateBodyPadding();
   }
 
-  function updateToolbarSelect() {
+  function updateLangSelect() {
+    if (!toolbarSelect || !toolbarLangSelect) return;
+    const langKey = LANG_STORAGE_KEY[toolbarSelect.value] || "ollamaTargetLang";
+    browser.storage.local.get({ [langKey]: "en" }).then((s) => {
+      toolbarLangSelect.value = s[langKey];
+    });
+  }
+
+  function updateToolbarSelects() {
     if (!toolbarSelect) return;
-    browser.storage.local.get({ service: "ollama" }).then(({ service }) => {
-      toolbarSelect.value = service;
+    browser.storage.local.get({
+      service: "google",
+      ollamaTargetLang: "en",
+      googleTargetLang: "en",
+      libreTargetLang: "en",
+    }).then((s) => {
+      toolbarSelect.value = s.service;
+      const langKey = LANG_STORAGE_KEY[s.service] || "googleTargetLang";
+      if (toolbarLangSelect) toolbarLangSelect.value = s[langKey];
     });
   }
 
   browser.storage.onChanged.addListener((changes, area) => {
-    if (area === "local" && changes.service) updateToolbarSelect();
+    if (area === "local" && (changes.service || changes.ollamaTargetLang || changes.googleTargetLang || changes.libreTargetLang)) {
+      updateToolbarSelects();
+    }
   });
 
   function setToolbarStatus(text, type = "") {
@@ -293,7 +338,6 @@
       NodeFilter.SHOW_TEXT,
       {
         acceptNode(node) {
-          // Skip the toolbar itself
           if (toolbarEl && toolbarEl.contains(node)) return NodeFilter.FILTER_REJECT;
 
           let parent = node.parentElement;
@@ -403,7 +447,6 @@
   async function startTranslation() {
     ensureToolbar();
 
-    // Re-apply cached translation without a service call
     if (translationCached && nodeMap.size > 0) {
       for (const [node, data] of nodeMap.entries()) {
         if (document.body.contains(node) && data.translated) {
@@ -464,8 +507,6 @@
       setToolbarStatus(msg, "error");
       setToolbarButton("Translate");
     }
-
-    port.postMessage({ command: "translationComplete" });
   }
 
   function reloadPage() {
@@ -487,7 +528,6 @@
       }
     }
 
-    // Keep nodeMap intact so the next Translate click can re-apply from cache
     isTranslated = false;
     setToolbarButton("Translate");
     setToolbarStatus("", "");
@@ -495,11 +535,15 @@
     console.log(`[Translator] Restored ${restored} nodes, ${detached} detached`);
   }
 
-  // Only show toolbar if email language differs from target language
   function initToolbar() {
-    browser.storage.local.get({ service: "ollama", ollamaTargetLang: "en", googleTargetLang: "en", libreTargetLang: "en" }).then((settings) => {
-      const serviceKey = { ollama: "ollamaTargetLang", google: "googleTargetLang", libretranslate: "libreTargetLang" };
-      const targetLang = settings[serviceKey[settings.service] || "ollamaTargetLang"] || "en";
+    browser.storage.local.get({
+      service: "google",
+      ollamaTargetLang: "en",
+      googleTargetLang: "en",
+      libreTargetLang: "en",
+    }).then((settings) => {
+      const langKey = LANG_STORAGE_KEY[settings.service] || "ollamaTargetLang";
+      const targetLang = settings[langKey] || "en";
       const emailLang = (document.documentElement.lang || document.body?.lang || "").toLowerCase();
 
       if (emailLang && emailLang.startsWith(targetLang.toLowerCase())) {

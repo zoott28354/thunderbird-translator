@@ -78,7 +78,7 @@
     }
   },
   "connectionSuccess": {
-    "message": "Соединение установлено! Найдено моделей: {count}.",
+    "message": "Соединение установлено! Найдено моделей: $COUNT$.",
     "description": "Сообщение об успешном соединении",
     "placeholders": {
       "count": {

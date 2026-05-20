@@ -2,12 +2,12 @@
 
 const DEFAULT_OLLAMA_URL = "http://localhost:11434";
 const DEFAULT_MODEL = "translategemma";
-const DEFAULT_SERVICE = "ollama";
-const DEFAULT_TARGET_LANGUAGE = "it";
+const DEFAULT_SERVICE = "google";
+const DEFAULT_LIBRE_URL = "https://libretranslate.com";
 
 const LANGUAGE_NAMES = {
-  it: "italiano",
   en: "English",
+  it: "italiano",
   es: "Español",
   fr: "Français",
   de: "Deutsch",
@@ -18,24 +18,6 @@ const LANGUAGE_NAMES = {
   ko: "한국어",
 };
 
-// Convert text to Unicode bold (for menu highlighting)
-function toBold(text) {
-  const boldMap = {
-    'a': '𝗮', 'b': '𝗯', 'c': '𝗰', 'd': '𝗱', 'e': '𝗲', 'f': '𝗳', 'g': '𝗴', 'h': '𝗵', 'i': '𝗶',
-    'j': '𝗷', 'k': '𝗸', 'l': '𝗹', 'm': '𝗺', 'n': '𝗻', 'o': '𝗼', 'p': '𝗽', 'q': '𝗾', 'r': '𝗿',
-    's': '𝘀', 't': '𝘁', 'u': '𝘂', 'v': '𝘃', 'w': '𝘄', 'x': '𝘅', 'y': '𝘆', 'z': '𝘇',
-    'A': '𝗔', 'B': '𝗕', 'C': '𝗖', 'D': '𝗗', 'E': '𝗘', 'F': '𝗙', 'G': '𝗚', 'H': '𝗛', 'I': '𝗜',
-    'J': '𝗝', 'K': '𝗞', 'L': '𝗟', 'M': '𝗠', 'N': '𝗡', 'O': '𝗢', 'P': '𝗣', 'Q': '𝗤', 'R': '𝗥',
-    'S': '𝗦', 'T': '𝗧', 'U': '𝗨', 'V': '𝗩', 'W': '𝗪', 'X': '𝗫', 'Y': '𝗬', 'Z': '𝗭',
-    '0': '𝟬', '1': '𝟭', '2': '𝟮', '3': '𝟯', '4': '𝟰', '5': '𝟱', '6': '𝟲', '7': '𝟳', '8': '𝟴', '9': '𝟵',
-    'á': 'á', 'é': 'é', 'í': 'í', 'ó': 'ó', 'ú': 'ú', 'ñ': 'ñ', 'ü': 'ü',
-    'Á': 'Á', 'É': 'É', 'Í': 'Í', 'Ó': 'Ó', 'Ú': 'Ú', 'Ñ': 'Ñ', 'Ü': 'Ü',
-    'à': 'à', 'è': 'è', 'ì': 'ì', 'ò': 'ò', 'ù': 'ù',
-    'ç': 'ç', 'Ç': 'Ç'
-  };
-  return text.split('').map(char => boldMap[char] || char).join('');
-}
-
 // --- Settings ---
 
 async function getSettings() {
@@ -43,206 +25,18 @@ async function getSettings() {
     ollamaUrl: DEFAULT_OLLAMA_URL,
     model: DEFAULT_MODEL,
     service: DEFAULT_SERVICE,
-    targetLanguage: DEFAULT_TARGET_LANGUAGE,
-    ollamaTargetLang: DEFAULT_TARGET_LANGUAGE,
+    ollamaTargetLang: "en",
     googleTargetLang: "en",
     libreTargetLang: "en",
+    libreUrl: DEFAULT_LIBRE_URL,
+    ollamaApiKey: "",
+    libreApiKey: "",
   };
-  const stored = await messenger.storage.local.get(defaults);
-  return stored;
+  return messenger.storage.local.get(defaults);
 }
 
-// --- Context Menu ---
+// --- Register message display script ---
 
-// Serialize menu creation: queue at most one pending rebuild
-let menuCreateChain = Promise.resolve();
-let menuPendingCount = 0;
-
-function createContextMenu() {
-  // If there's already one pending call queued, don't add another
-  if (menuPendingCount >= 1) return;
-  menuPendingCount++;
-  menuCreateChain = menuCreateChain.then(async () => {
-    menuPendingCount--;
-    try {
-      const settings = await getSettings();
-      const { ollamaTargetLang, googleTargetLang, libreTargetLang } = settings;
-
-      // Always remove all menus first to avoid ID conflicts
-      await messenger.menus.removeAll();
-
-      const languages = Object.keys(LANGUAGE_NAMES);
-
-      // Create Ollama menu with language submenus
-      await messenger.menus.create({
-        id: "translate-ollama-parent",
-        title: messenger.i18n.getMessage("contextMenuTitle"),
-        contexts: ["page", "frame", "selection"],
-      });
-
-      for (const langCode of languages) {
-        const langName = LANGUAGE_NAMES[langCode];
-        const isSelected = langCode === ollamaTargetLang;
-        const title = isSelected ? toBold(langName) : langName;
-
-        await messenger.menus.create({
-          id: `ollama-${langCode}`,
-          parentId: "translate-ollama-parent",
-          title: title,
-          contexts: ["page", "frame", "selection"],
-        });
-      }
-
-      // Create Google Translate menu with language submenus
-      await messenger.menus.create({
-        id: "translate-google-parent",
-        title: messenger.i18n.getMessage("googleTranslateMenuTitle") || "Translate with Google Translate",
-        contexts: ["page", "frame", "selection"],
-      });
-
-      for (const langCode of languages) {
-        const langName = LANGUAGE_NAMES[langCode];
-        const isSelected = langCode === googleTargetLang;
-        const title = isSelected ? toBold(langName) : langName;
-
-        await messenger.menus.create({
-          id: `google-${langCode}`,
-          parentId: "translate-google-parent",
-          title: title,
-          contexts: ["page", "frame", "selection"],
-        });
-      }
-
-      // Create LibreTranslate menu with language submenus
-      await messenger.menus.create({
-        id: "translate-libre-parent",
-        title: messenger.i18n.getMessage("libreTranslateMenuTitle") || "Translate with LibreTranslate",
-        contexts: ["page", "frame", "selection"],
-      });
-
-      for (const langCode of languages) {
-        const langName = LANGUAGE_NAMES[langCode];
-        const isSelected = langCode === libreTargetLang;
-        const title = isSelected ? toBold(langName) : langName;
-
-        await messenger.menus.create({
-          id: `libre-${langCode}`,
-          parentId: "translate-libre-parent",
-          title: title,
-          contexts: ["page", "frame", "selection"],
-        });
-      }
-
-      console.log(`[Translator] Menu created with 3 services, each with ${languages.length} language options`);
-    } catch (e) {
-      console.warn("[Translator] Error in createContextMenu:", e.message);
-    }
-  });
-}
-
-// --- Initialize context menu on startup and install ---
-messenger.runtime.onStartup.addListener(() => {
-  console.log("[Translator] Extension started, creating menu");
-  createContextMenu();
-});
-
-messenger.runtime.onInstalled.addListener(() => {
-  console.log("[Translator] Extension installed, creating menu");
-  createContextMenu();
-});
-
-// --- Update context menu when settings change ---
-messenger.storage.onChanged.addListener((changes, area) => {
-  if (area === "local" && (changes.ollamaTargetLang || changes.googleTargetLang || changes.libreTargetLang)) {
-    console.log("[Translator] Service language changed, updating menu");
-    createContextMenu();
-  }
-});
-
-// --- Inject content script into active message display tab ---
-// message_display_scripts in manifest auto-loads on new messages,
-// but as a fallback we also inject manually when no port is available.
-
-async function injectAndSend(targetLang, preferredTabId = null) {
-  let tabId = preferredTabId;
-
-  // Strategy 1: dedicated messageDisplay tab (email in separate window)
-  if (tabId === null) {
-    try {
-      const msgTabs = await messenger.tabs.query({ type: "messageDisplay" });
-      if (msgTabs.length > 0) {
-        tabId = msgTabs[0].id;
-        console.log("[Translator] Found messageDisplay tab:", tabId);
-      }
-    } catch (e) {
-      console.warn("[Translator] tabs.query messageDisplay failed:", e.message);
-    }
-  }
-
-  // Strategy 2: active mail tab (3-pane view) via messageDisplay API
-  if (tabId === null) {
-    try {
-      const mailTabs = await messenger.mailTabs.query({ active: true, currentWindow: true });
-      if (mailTabs.length > 0) {
-        const msg = await messenger.messageDisplay.getDisplayedMessage(mailTabs[0].id);
-        if (msg) {
-          tabId = mailTabs[0].id;
-          console.log("[Translator] Found active mail tab with message:", tabId);
-        }
-      }
-    } catch (e) {
-      console.warn("[Translator] mailTabs strategy failed:", e.message);
-    }
-  }
-
-  if (tabId === null) {
-    console.error("[Translator] No message display tab found - open an email first");
-    return;
-  }
-
-  // Inject the content script
-  console.log("[Translator] Injecting content script into tab:", tabId);
-  try {
-    await messenger.tabs.executeScript(tabId, {
-      file: "content/translator.js",
-      runAt: "document_start",
-      allFrames: false,
-    });
-    console.log("[Translator] Injection via tabs.executeScript succeeded");
-  } catch (e1) {
-    console.warn("[Translator] tabs.executeScript failed:", e1.message, "- trying scripting API");
-    try {
-      await messenger.scripting.executeScript({
-        target: { tabId: tabId },
-        files: ["content/translator.js"],
-      });
-      console.log("[Translator] Injection via scripting.executeScript succeeded");
-    } catch (e2) {
-      console.error("[Translator] All injection methods failed:", e2.message);
-      return;
-    }
-  }
-
-  // Poll for port connection by tabId, then send the command
-  const resolvedTabId = tabId;
-  let waited = 0;
-  const interval = setInterval(() => {
-    waited += 50;
-    const port = getPortForTab(resolvedTabId);
-    if (port) {
-      clearInterval(interval);
-      console.log("[Translator] Port connected after injection, sending startTranslation");
-      port.postMessage({ command: "startTranslation", targetLanguage: targetLang });
-    } else if (waited >= 2000) {
-      clearInterval(interval);
-      console.error("[Translator] Port never connected after injection (timeout 2s)");
-    }
-  }, 50);
-}
-
-// --- Register message display script programmatically ---
-// The manifest key message_display_scripts is not recognised by all TB versions.
-// Using the API directly is more reliable and works across all versions.
 if (messenger.messageDisplayScripts) {
   messenger.messageDisplayScripts.register({
     js: [{ file: "content/translator.js" }],
@@ -254,55 +48,13 @@ if (messenger.messageDisplayScripts) {
 }
 
 // --- Port-based communication with content scripts ---
-// content/translator.js is registered via messageDisplayScripts above, so it
-// auto-injects into every displayed email.  We keep TWO maps:
-//   portMap      : tabId            → port   (quick lookup by tab)
-//   framePortMap : "tabId-frameId"  → port   (exact frame-level lookup)
-// menus.onShown captures {tabId, frameId} synchronously in the background when
-// the context menu appears – this is the most reliable routing signal.
 
 const portMap = new Map();      // tabId → port
 const framePortMap = new Map(); // "tabId-frameId" → port
 let lastActivePort = null;
 
-// Context captured by menus.onShown (runs synchronously in background)
-let lastShownMenuContext = null;
-
-messenger.menus.onShown.addListener((info, tab) => {
-  lastShownMenuContext = {
-    tabId: tab?.id ?? null,
-    frameId: info.frameId ?? 0,
-  };
-  console.log("[Translator] Menu shown – tabId:", lastShownMenuContext.tabId,
-              "frameId:", lastShownMenuContext.frameId);
-});
-
-messenger.menus.onHidden.addListener(() => {
-  lastShownMenuContext = null;
-});
-
 function getPortForTab(tabId) {
-  // 1. HIGHEST PRIORITY: exact frame match from menus.onShown
-  if (lastShownMenuContext) {
-    const { tabId: shownTabId, frameId } = lastShownMenuContext;
-    const key = `${shownTabId}-${frameId}`;
-    if (framePortMap.has(key)) {
-      console.log("[Translator] Exact frame match from onShown:", key);
-      return framePortMap.get(key);
-    }
-    // If the exact frame isn't found, try the shownTabId in portMap
-    if (portMap.has(shownTabId)) {
-      console.log("[Translator] Tab match from onShown:", shownTabId);
-      return portMap.get(shownTabId);
-    }
-  }
-  // 2. tabId passed by menus.onClicked
-  if (tabId != null && portMap.has(tabId)) {
-    console.log("[Translator] Tab match from onClicked:", tabId);
-    return portMap.get(tabId);
-  }
-  // 3. Last resort
-  console.warn("[Translator] No precise match – using lastActivePort");
+  if (tabId != null && portMap.has(tabId)) return portMap.get(tabId);
   return lastActivePort;
 }
 
@@ -327,9 +79,7 @@ messenger.runtime.onConnect.addListener((port) => {
     }
   });
 
-  // Handle messages from content script through the port
   port.onMessage.addListener(async (message) => {
-
     if (message.command === "getSubject") {
       try {
         const msg = await messenger.messageDisplay.getDisplayedMessage(tabId);
@@ -342,21 +92,15 @@ messenger.runtime.onConnect.addListener((port) => {
     }
 
     if (message.command === "getMessages") {
-      // Send localized messages to content script
       const getMsg = (key, fallback) => {
-        try {
-          return messenger.i18n?.getMessage(key) || fallback;
-        } catch (e) {
-          return fallback;
-        }
+        try { return messenger.i18n?.getMessage(key) || fallback; } catch { return fallback; }
       };
-      
       port.postMessage({
         command: "messages",
         data: {
           noText: getMsg("noText", "No text to translate"),
           translating: getMsg("translating", "Translating..."),
-          success: getMsg("translationComplete", "Translation complete!"),
+          success: getMsg("translationComplete", "Done"),
           errorUnreachable: "Error: " + getMsg("translationError", "Translation error"),
           error: getMsg("translationError", "Translation error"),
           subjectLabel: getMsg("subjectLabel", "Subject:"),
@@ -366,40 +110,14 @@ messenger.runtime.onConnect.addListener((port) => {
     }
 
     if (message.command === "translate") {
-      console.log(`[Translator] Received translate request, id: ${message.id}, text length: ${message.text?.length || 0}`);
+      console.log(`[Translator] Translate request id:${message.id}, length:${message.text?.length || 0}`);
       try {
-        let settings = await getSettings();
-
-        // Override targetLanguage if provided in message (from menu selection)
-        if (message.targetLanguage) {
-          settings = { ...settings, targetLanguage: message.targetLanguage };
-          console.log(`[Translator] Using target language from menu: ${message.targetLanguage}`);
-        }
-
-        console.log(`[Translator] Settings loaded:`, settings);
+        const settings = await getSettings();
         const translated = await translateText(message.text, settings);
-        console.log(`[Translator] Translation completed, sending response. Translated length: ${translated?.length || 0}`);
         port.postMessage({ id: message.id, success: true, translated });
-        console.log(`[Translator] Response sent to content script`);
       } catch (e) {
         console.error("[Translator] Translation error:", e);
         port.postMessage({ id: message.id, success: false, error: e.message });
-      }
-    }
-
-    if (message.command === "translationComplete") {
-      toggleMenuCreated = true;
-      try {
-        await messenger.menus.create({
-          id: "toggle-original",
-          title: messenger.i18n.getMessage("showOriginal"),
-          contexts: ["page", "frame", "selection"],
-        });
-      } catch (_) {
-        messenger.menus.update("toggle-original", {
-          title: messenger.i18n.getMessage("showOriginal"),
-          visible: true,
-        });
       }
     }
   });
@@ -408,9 +126,8 @@ messenger.runtime.onConnect.addListener((port) => {
 // --- Ollama API ---
 
 async function translateWithOllama(text, settings) {
-  const { ollamaUrl, model, targetLanguage } = settings;
+  const { ollamaUrl, model, targetLanguage, ollamaApiKey } = settings;
   const url = `${ollamaUrl}/api/generate`;
-
   const langName = LANGUAGE_NAMES[targetLanguage] || targetLanguage;
   const prompt = `Translate the following text to ${langName}.
 Rules:
@@ -421,14 +138,13 @@ Rules:
 
 Text: ${text}`;
 
+  const headers = { "Content-Type": "application/json" };
+  if (ollamaApiKey) headers["Authorization"] = `Bearer ${ollamaApiKey}`;
+
   const response = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model,
-      prompt,
-      stream: false,
-    }),
+    headers,
+    body: JSON.stringify({ model, prompt, stream: false }),
   });
 
   if (!response.ok) {
@@ -445,8 +161,6 @@ Text: ${text}`;
 // --- Google Translate API (non-official, free) ---
 
 async function translateWithGoogle(text, targetLanguage) {
-  console.log("[Translator] Google Translate called with target:", targetLanguage);
-
   const params = new URLSearchParams({
     client: "gtx",
     sl: "auto",
@@ -455,212 +169,81 @@ async function translateWithGoogle(text, targetLanguage) {
     q: text,
   });
 
-  const url = `https://translate.google.com/translate_a/single?${params}`;
-  console.log("[Translator] Google Translate URL:", url);
-
-  const response = await fetch(url, {
-    method: "GET",
-    headers: {
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-    },
+  const response = await fetch(`https://translate.google.com/translate_a/single?${params}`, {
+    headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" },
   });
 
-  console.log("[Translator] Google Translate response status:", response.status);
-
-  if (!response.ok) {
-    throw new Error(`Google Translate error: ${response.status}`);
-  }
+  if (!response.ok) throw new Error(`Google Translate error: ${response.status}`);
 
   const data = await response.json();
-  console.log("[Translator] Google Translate response data:", JSON.stringify(data).substring(0, 200));
-
-  // Google Translate returns: [[[translated_part1, original_part1, ...], [translated_part2, original_part2, ...]], ...]
-  // We need to concatenate all translated parts from data[0]
-  if (data && data[0] && Array.isArray(data[0])) {
-    const translatedParts = [];
-
-    for (const part of data[0]) {
-      if (part && part[0]) {
-        translatedParts.push(part[0]);
-      }
-    }
-
-    if (translatedParts.length > 0) {
-      const translated = translatedParts.join("").trim();
-      console.log(`[Translator] Google Translate result: ${translatedParts.length} parts, total length: ${translated.length}`);
-      console.log("[Translator] First 100 chars:", translated.substring(0, 100));
-      return translated;
-    }
+  if (data?.[0] && Array.isArray(data[0])) {
+    const translated = data[0].filter(p => p?.[0]).map(p => p[0]).join("").trim();
+    if (translated) return translated;
   }
-
   throw new Error("Invalid response from Google Translate");
 }
 
-// --- LibreTranslate API (free public instance) ---
+// --- LibreTranslate API ---
 
-async function translateWithLibreTranslate(text, targetLanguage) {
-  console.log("[Translator] LibreTranslate called with target:", targetLanguage);
+async function translateWithLibreTranslate(text, targetLanguage, libreUrl, libreApiKey) {
+  const base = (libreUrl || DEFAULT_LIBRE_URL).replace(/\/+$/, "");
+  const endpoint = base.endsWith("/translate") ? base : base + "/translate";
 
-  // Try multiple LibreTranslate instances
-  const instances = [
-    "https://translate.fedilab.app/translate",
-    "https://libretranslate.com/translate",
-    "https://translate.argosopentech.com/translate",
-  ];
+  const body = { q: text, source: "auto", target: targetLanguage };
+  if (libreApiKey) body.api_key = libreApiKey;
 
-  let lastError = null;
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
 
-  for (const url of instances) {
-    try {
-      console.log("[Translator] Trying LibreTranslate instance:", url);
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          q: text,
-          source: "auto",
-          target: targetLanguage,
-        }),
-      });
-
-      console.log("[Translator] LibreTranslate response status:", response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.log("[Translator] LibreTranslate error response:", errorText);
-        throw new Error(`LibreTranslate error: ${response.status} - ${errorText.substring(0, 100)}`);
-      }
-
-      const data = await response.json();
-      console.log("[Translator] LibreTranslate response data:", JSON.stringify(data).substring(0, 200));
-
-      if (data && data.translatedText) {
-        console.log("[Translator] LibreTranslate result:", data.translatedText.substring(0, 100));
-        return data.translatedText.trim();
-      }
-
-      if (data && data.error) {
-        throw new Error(`LibreTranslate API error: ${data.error}`);
-      }
-
-      throw new Error("Invalid response from LibreTranslate: missing translatedText field");
-    } catch (e) {
-      console.warn(`[Translator] LibreTranslate instance ${url} failed:`, e.message);
-      lastError = e;
-      // Try next instance
-    }
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`LibreTranslate error: ${response.status} - ${errorText.substring(0, 100)}`);
   }
 
-  // All instances failed
-  throw new Error(`LibreTranslate: All instances failed. Last error: ${lastError.message}`);
+  const data = await response.json();
+  if (data?.translatedText) return data.translatedText.trim();
+  if (data?.error) throw new Error(`LibreTranslate API error: ${data.error}`);
+  throw new Error("Invalid response from LibreTranslate");
 }
 
 // --- Main Translation Function ---
 
 async function translateText(text, settings) {
-  const { service, targetLanguage } = settings;
+  const { service, ollamaTargetLang, googleTargetLang, libreTargetLang, libreUrl, libreApiKey } = settings;
+  const targetLang = { ollama: ollamaTargetLang, google: googleTargetLang, libretranslate: libreTargetLang }[service] || "en";
 
-  console.log(`[Translator] translateText called - service: ${service}, target: ${targetLanguage}, text length: ${text.length}`);
+  console.log(`[Translator] translateText – service:${service}, target:${targetLang}, length:${text.length}`);
 
-  try {
-    let result;
-    switch (service) {
-      case "ollama":
-        result = await translateWithOllama(text, settings);
-        break;
-      case "google":
-        result = await translateWithGoogle(text, targetLanguage);
-        break;
-      case "libretranslate":
-        result = await translateWithLibreTranslate(text, targetLanguage);
-        break;
-      default:
-        throw new Error(`Unknown service: ${service}`);
-    }
-    console.log(`[Translator] Translation successful, result length: ${result?.length || 0}`);
-    return result;
-  } catch (e) {
-    console.error(`[Translator] ${service} error:`, e);
-    throw e;
+  switch (service) {
+    case "ollama":
+      return translateWithOllama(text, { ...settings, targetLanguage: targetLang });
+    case "google":
+      return translateWithGoogle(text, targetLang);
+    case "libretranslate":
+      return translateWithLibreTranslate(text, targetLang, libreUrl, libreApiKey);
+    default:
+      throw new Error(`Unknown service: ${service}`);
   }
 }
 
 async function getInstalledModels(ollamaUrl) {
-  const url = `${ollamaUrl || DEFAULT_OLLAMA_URL}/api/tags`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Ollama error: ${response.status}`);
-  }
+  const response = await fetch(`${ollamaUrl || DEFAULT_OLLAMA_URL}/api/tags`);
+  if (!response.ok) throw new Error(`Ollama error: ${response.status}`);
   const data = await response.json();
-  return data.models.map((m) => m.name);
+  return data.models.map(m => m.name);
 }
 
-// --- Toggle State ---
+// --- Options page messages ---
 
-let toggleMenuCreated = false;
-
-// --- Event Handlers ---
-
-messenger.menus.onClicked.addListener(async (info, tab) => {
-  const tabId = tab?.id ?? null;
-
-  // Retrieve port BEFORE clearing the onShown context
-  const port = getPortForTab(tabId);
-  lastShownMenuContext = null;
-
-  // Check if it's a service-specific language menu item
-  let service = null;
-  let targetLang = null;
-
-  if (info.menuItemId.startsWith("ollama-")) {
-    service = "ollama";
-    targetLang = info.menuItemId.replace("ollama-", "");
-  } else if (info.menuItemId.startsWith("google-")) {
-    service = "google";
-    targetLang = info.menuItemId.replace("google-", "");
-  } else if (info.menuItemId.startsWith("libre-")) {
-    service = "libretranslate";
-    targetLang = info.menuItemId.replace("libre-", "");
-  }
-
-  if (service && targetLang) {
-    console.log(`[Translator] ${service} - Translate to '${targetLang}' (${LANGUAGE_NAMES[targetLang]}) menu clicked, tabId:`, tabId);
-
-    // Save the selected language permanently for this service
-    const storageKey = service === "ollama" ? "ollamaTargetLang" :
-                       service === "google" ? "googleTargetLang" :
-                       "libreTargetLang";
-
-    await messenger.storage.local.set({
-      [storageKey]: targetLang,
-      service: service,
-      targetLanguage: targetLang // Keep this for backward compatibility
-    });
-
-    console.log(`[Translator] Saved ${storageKey} = ${targetLang}, service = ${service}`);
-
-    if (port) {
-      console.log("[Translator] Port active, sending startTranslation with target:", targetLang);
-      port.postMessage({ command: "startTranslation", targetLanguage: targetLang });
-    } else {
-      console.log("[Translator] No active port, attempting injection as fallback");
-      await injectAndSend(targetLang, tabId);
-    }
-  } else if (info.menuItemId === "toggle-original") {
-    if (port) {
-      port.postMessage({ command: "reloadOriginal" });
-    }
-  }
-});
-
-// Handle messages from options page (uses runtime.sendMessage, not ports)
-messenger.runtime.onMessage.addListener(async (message, sender) => {
+messenger.runtime.onMessage.addListener(async (message) => {
   if (message.command === "getModels") {
     try {
       const settings = await getSettings();
-      const models = await getInstalledModels(settings.ollamaUrl);
-      return { success: true, models };
+      const url = message.ollamaUrl || settings.ollamaUrl;
+      return { success: true, models: await getInstalledModels(url) };
     } catch (e) {
       return { success: false, error: e.message };
     }
@@ -668,49 +251,20 @@ messenger.runtime.onMessage.addListener(async (message, sender) => {
 
   if (message.command === "testConnection") {
     try {
-      const url = message.ollamaUrl || DEFAULT_OLLAMA_URL;
-      const models = await getInstalledModels(url);
-      return { success: true, models };
+      return { success: true, models: await getInstalledModels(message.ollamaUrl) };
     } catch (e) {
       return { success: false, error: e.message };
     }
   }
 
-  if (message.command === "getSettings") {
-    return await getSettings();
-  }
-
   if (message.command === "saveSettings") {
-    // Aggiorna il menu quando cambiano le impostazioni
-    const targetLang = message.targetLanguage || DEFAULT_TARGET_LANGUAGE;
-    const service = message.service || DEFAULT_SERVICE;
-
-    // Update service-specific language based on current service
-    const storageData = {
-      service: service,
-      targetLanguage: targetLang,
+    await messenger.storage.local.set({
       ollamaUrl: message.ollamaUrl,
       model: message.model,
-    };
-
-    // Update the appropriate service-specific language
-    if (service === "ollama") {
-      storageData.ollamaTargetLang = targetLang;
-    } else if (service === "google") {
-      storageData.googleTargetLang = targetLang;
-    } else if (service === "libretranslate") {
-      storageData.libreTargetLang = targetLang;
-    }
-
-    await messenger.storage.local.set(storageData);
-
-    // Ricrea il menu con la nuova lingua
-    createContextMenu();
-
+      ollamaApiKey: message.ollamaApiKey,
+      libreUrl: message.libreUrl,
+      libreApiKey: message.libreApiKey,
+    });
     return { success: true };
   }
 });
-
-// --- Initialization ---
-
-createContextMenu();
