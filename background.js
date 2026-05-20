@@ -134,6 +134,23 @@ messenger.runtime.onConnect.addListener((port) => {
         }
         return;
       }
+      // Subject translation request
+      if (message.command === "getTranslatedSubject") {
+        try {
+          const msg = await messenger.messageDisplay.getDisplayedMessage(tabId);
+          const subject = msg?.subject || "";
+          if (!subject) {
+            port.postMessage({ id: message.id, success: true, translated: null });
+            return;
+          }
+          const settings = await getSettings();
+          const translated = await translateText(subject, settings);
+          port.postMessage({ id: message.id, success: true, translated });
+        } catch (e) {
+          port.postMessage({ id: message.id, success: false, error: e.message });
+        }
+        return;
+      }
       // Response to popup command
       if (["translateDone", "revertDone", "stateDone"].includes(message.command)) {
         resolvePending(message.reqId, message);

@@ -22,6 +22,8 @@
   const nodeMap = new Map();
   let isTranslated = false;
   let translationCached = false;
+  let translatedSubject = null;
+  let subjectBar = null;
 
   // --- Port to background ---
 
@@ -62,6 +64,64 @@
       pendingRequests.set(id, { resolve, reject });
       port.postMessage({ command: "translate", id, text });
     });
+  }
+
+  function sendSubjectTranslateRequest() {
+    return new Promise((resolve, reject) => {
+      const id = nextRequestId++;
+      pendingRequests.set(id, { resolve, reject });
+      port.postMessage({ command: "getTranslatedSubject", id });
+    });
+  }
+
+  // --- Subject bar ---
+
+  function createSubjectBarStyle() {
+    if (document.getElementById("__translator_subject_bar_style__")) return;
+    const style = document.createElement("style");
+    style.id = "__translator_subject_bar_style__";
+    style.textContent = `
+      #__translator_subject_bar__ {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 9999;
+        padding: 5px 12px;
+        font-size: 16px;
+        font-weight: 600;
+        background: Canvas;
+        color: CanvasText;
+        border-bottom: 1px solid GrayText;
+        box-sizing: border-box;
+        color-scheme: light dark;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function injectSubjectBar(text) {
+    removeSubjectBar();
+    createSubjectBarStyle();
+    const bar = document.createElement("div");
+    bar.id = "__translator_subject_bar__";
+    bar.textContent = "📧 " + text;
+    document.body.insertBefore(bar, document.body.firstChild);
+    subjectBar = bar;
+    requestAnimationFrame(() => {
+      const height = bar.getBoundingClientRect().height || 36;
+      document.body.style.setProperty("padding-top", height + "px", "important");
+      document.body.style.setProperty("margin-top", "0", "important");
+    });
+  }
+
+  function removeSubjectBar() {
+    const existing = document.getElementById("__translator_subject_bar__");
+    if (existing) existing.remove();
+    document.body.style.removeProperty("padding-top");
+    document.body.style.removeProperty("margin-top");
+    subjectBar = null;
   }
 
   // --- DOM Text Extraction ---
@@ -190,6 +250,7 @@
           node.textContent = data.translated;
         }
       }
+      if (translatedSubject) injectSubjectBar(translatedSubject);
       isTranslated = true;
       return { success: true };
     }
@@ -200,10 +261,21 @@
     try {
       const preBlocks    = blocks.filter(b => b.nodes[0]?.parentElement?.tagName === "PRE");
       const nonPreBlocks = blocks.filter(b => !preBlocks.includes(b));
-      for (const block of preBlocks) await translateNodeByNode(block);
-      if (nonPreBlocks.length > 0) await translateByBlocks(nonPreBlocks);
+
+      // Translate body and subject in parallel
+      const bodyPromise = (async () => {
+        for (const block of preBlocks) await translateNodeByNode(block);
+        if (nonPreBlocks.length > 0) await translateByBlocks(nonPreBlocks);
+      })();
+      const subjectPromise = sendSubjectTranslateRequest().catch(() => null);
+
+      await bodyPromise;
       isTranslated = true;
       translationCached = true;
+
+      translatedSubject = await subjectPromise;
+      if (translatedSubject) injectSubjectBar(translatedSubject);
+
       return { success: true };
     } catch (e) {
       const msg = (e.message.includes("Failed to fetch") || e.message.includes("NetworkError"))
@@ -214,6 +286,7 @@
   }
 
   function reloadPage() {
+    removeSubjectBar();
     for (const [node, data] of nodeMap.entries()) {
       try {
         if (document.body.contains(node)) node.textContent = data.original;

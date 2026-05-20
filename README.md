@@ -31,7 +31,6 @@
 ## 📋 Requirements
 
 - **Thunderbird** 128 or later (ESR and non-ESR)
-- **Google Translate** — works out of the box, no configuration needed
 - **Ollama** — must be installed and running (local machine or private server); see [setup](#ollama-1)
 - **LibreTranslate** — must be reachable (local machine, private server, or public instance); see [setup](#libretranslate-1)
 
@@ -170,6 +169,9 @@ Highlight text in the compose body *before* clicking the Translate button in the
 ---
 
 ## 📜 Changelog
+
+### v1.7.1 (fork — jctots)
+- **Translated subject bar** — sticky bar at the top of the email body showing the translated subject; respects dark mode; removed on revert
 
 ### v1.7.0 (fork — jctots)
 - **Compose translation** — select text in compose window and translate in place

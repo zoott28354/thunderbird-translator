@@ -23,7 +23,6 @@ $includes = @(
     'popup\popup.css',
     'options\options.html',
     'options\options.js',
-    'options\options.css',
     'icons\translate-48.png',
     'icons\translate-96.png'
 )
