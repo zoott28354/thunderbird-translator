@@ -1,4 +1,4 @@
-$src = 'C:\Users\giuli\Documents\GitHub\thunderbird-translator'
+$src = $PSScriptRoot
 $manifest = Get-Content (Join-Path $src 'manifest.json') | ConvertFrom-Json
 $version = $manifest.version
 $xpiPath = Join-Path $src "thunderbird-translator-v$version.xpi"
